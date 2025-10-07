@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Plus, Trash2, Tag, BookOpen, Clock, Notebook } from "lucide-react"
+import { Plus, Trash2, Tag, Clock, Notebook } from "lucide-react"
 
 // --- Dummy Data ---
 const categories = [
