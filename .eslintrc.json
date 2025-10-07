@@ -13,7 +13,16 @@
     "plugin:import/typescript"
   ],
   "parser": "@typescript-eslint/parser",
+  "settings": {
+    "import/resolver": {
+      "typescript": {
+        "alwaysTryTypes": true,
+        "project": "./tsconfig.json"
+      }
+    }
+  },
   "rules": {
-    "semi": ["error", "never"]
+    "semi": ["error", "never"],
+    "indent": ["error", 2]
   }
 }
