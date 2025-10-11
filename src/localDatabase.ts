@@ -1,19 +1,19 @@
 import path from 'path'
 import { app } from 'electron'
-import sqlite3 from 'sqlite3'
+import { Database } from 'sqlite3'
 
-export class LocalDB {
-  private static instance: sqlite3.Database | null = null
+export default class LocalDatabase {
+  private static instance: Database | null = null
 
   /**
    * Initialize and load the SQLite database.
    * Creates tables and enables foreign keys.
    */
-  static load(): sqlite3.Database {
+  static load(): Database {
     if (this.instance) return this.instance
 
     const dbPath = path.join(app.getPath('userData'), 'notelance.db')
-    const db = new sqlite3.Database(dbPath, (err) => {
+    const db = new Database(dbPath, (err) => {
       if (err) {
         console.error('❌ Error connecting to database:', err.message)
       } else {

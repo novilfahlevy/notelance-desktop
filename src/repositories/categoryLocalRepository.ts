@@ -1,12 +1,12 @@
 import sqlite3 from 'sqlite3'
-import { LocalDB } from '../local-db'
-import type { Category } from '../types/data-models'
+import LocalDatabase from '@/localDatabase'
+import type { Category } from '@/types/data-models'
 
 export class CategoryLocalRepository {
   private db: sqlite3.Database
 
   constructor() {
-    this.db = LocalDB.load()
+    this.db = LocalDatabase.load()
   }
 
   private _run(sql: string, params: any[] = []): Promise<void> {
