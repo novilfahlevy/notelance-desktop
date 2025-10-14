@@ -1,41 +1,27 @@
+import { RootState } from "@/app/store"
 import { Category } from "@/types/data-models"
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
+import { createSlice, PayloadAction } from "@reduxjs/toolkit"
 
 interface CategoriesState {
-  categories: Category[]
   selectedCategory: Category | null
 }
 
 const initialState: CategoriesState = {
-  categories: [],
   selectedCategory: null,
 }
 
 export const categoriesSlice = createSlice({
-  name: "categories",
+  name: 'categories',
   initialState,
   reducers: {
-    setCategories: (state: CategoriesState, action) => {
-      state.categories = action.payload as Category[]
+    setSelectedCategory: (state: CategoriesState, action: PayloadAction<Category | null>) => {
+      state.selectedCategory = action.payload
     }
-  },
-  extraReducers(builder) {
-    builder.addAsyncThunk(fetchLocalCategories, {
-      fulfilled: (state, action) => {
-        state.categories = action.payload
-      }
-    })
   },
 })
 
-export const { setCategories } = categoriesSlice.actions
+export const selectSelectedCategory = (state: RootState) => state.categories.selectedCategory
+
+export const { setSelectedCategory } = categoriesSlice.actions
 
 export default categoriesSlice.reducer
-
-export const fetchLocalCategories = createAsyncThunk<Category[]>(
-  'categories/fetch-local-categories',
-  async () => {
-    const categories: Category[] = await window.localDatabase.fetchCategories()
-    return categories
-  }
-)

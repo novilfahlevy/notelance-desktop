@@ -1,8 +1,7 @@
-import { useAppDispatch, useAppSelector } from "@/app/hooks"
-import { RootState } from "@/app/store"
+import { useAppDispatch } from "@/app/hooks"
 import { Category } from "@/types/data-models"
 import { ReactElement, useEffect, useState } from "react"
-import { fetchLocalCategories } from "./categoriesSlice"
+import { setSelectedCategory } from "./categoriesSlice"
 
 import {
   Tag,
@@ -18,10 +17,15 @@ import {
 } from "lucide-react"
 
 export default function CategoriesPanel(): ReactElement {
+  const dispatch = useAppDispatch()
+
   const [isCategoriesPanelOpen, openCategoriesPanel] = useState<boolean>(true)
-  const [isManaging, setIsManaging] = useState<boolean>(false)
   const toggleCategoriesPanel = () => openCategoriesPanel(!isCategoriesPanelOpen)
-  const toggleManageMode = () => setIsManaging(!isManaging)
+
+  const [isManaging, setIsManaging] = useState<boolean>(false)
+  const handleToggleManageCategories = () => setIsManaging(!isManaging)
+
+  const [categories, setCategories] = useState<Category[]>([])
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isWindowSmallerThanLg, setIfWindowSmallerThanLg] = useState<boolean>(false)
@@ -47,12 +51,18 @@ export default function CategoriesPanel(): ReactElement {
     return () => window.removeEventListener("resize", handleResize)
   }, [])
 
-  const categories: Category[] = useAppSelector((state: RootState) => state.categories.categories)
-  const dispatch = useAppDispatch()
-
   useEffect(() => {
-    dispatch(fetchLocalCategories())
+    const fetchCategories = async () => {
+      const fetchedCategories: Category[] = await window.localDatabase.fetchCategories()
+      setCategories(fetchedCategories)
+    }
+
+    fetchCategories()
   }, [])
+
+  const handleSelectCategory = (category: Category | null) => {
+    dispatch(setSelectedCategory(category))
+  }
   
   return (
     <aside
@@ -83,8 +93,9 @@ export default function CategoriesPanel(): ReactElement {
 
         {/* Categories List */}
         <ul className="flex flex-col gap-y-2">
-          {/* “Semua” category (static) */}
+          {/* "Semua" category (static) */}
           <li
+            onClick={() => handleSelectCategory(null)}
             className={`flex items-center ${
               isCategoriesPanelOpen ? "justify-between" : "justify-center"
             } rounded-lg cursor-pointer p-3 hover:bg-accent-800/20 transition-all duration-150 select-none`}
@@ -103,6 +114,7 @@ export default function CategoriesPanel(): ReactElement {
             categories.map((category: Category) => (
               <li
                 key={category.id}
+                onClick={() => !isManaging && handleSelectCategory(category)}
                 className={`flex items-center ${
                   isCategoriesPanelOpen ? "justify-between" : "justify-center"
                 } rounded-lg cursor-pointer p-3 hover:bg-accent-800/20 transition-all duration-150 select-none group`}
@@ -159,7 +171,7 @@ export default function CategoriesPanel(): ReactElement {
         {/* Manage Categories Button */}
         {isCategoriesPanelOpen && (
           <button
-            onClick={toggleManageMode}
+            onClick={handleToggleManageCategories}
             className={`flex items-center justify-center gap-x-2 mt-auto py-2 px-3 rounded-md border border-border-default transition-all select-none outline-0 cursor-pointer w-full
                 ${isManaging ? "bg-accent-500" : "hover:border-accent-500 hover:text-accent-500"}`}
           >
