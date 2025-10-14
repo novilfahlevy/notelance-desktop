@@ -1,5 +1,5 @@
-import { ReactElement } from "react"
-import { Clock, Search } from "lucide-react"
+import { ReactElement } from 'react'
+import { Clock, Search } from 'lucide-react'
 
 export function NotesPanel(): ReactElement {
   return (

@@ -1,4 +1,4 @@
-import { Note } from "./data-models"
+import { Note } from './data-models'
 
 export interface FetchNotesResponse {
     message: string

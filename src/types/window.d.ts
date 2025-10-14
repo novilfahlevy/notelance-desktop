@@ -1,4 +1,4 @@
-import { Note, Category } from "./data-models"
+import { Note, Category } from './data-models'
 
 export interface LocalDatabase {
   fetchNotes: () => Promise<Note[]>

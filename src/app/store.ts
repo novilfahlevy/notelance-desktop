@@ -1,5 +1,5 @@
-import { Action, configureStore, ThunkAction } from "@reduxjs/toolkit"
-import categoriesReducer from "@/features/categories/categoriesSlice"
+import { Action, configureStore, ThunkAction } from '@reduxjs/toolkit'
+import categoriesReducer from '@/features/categories/categoriesSlice'
 
 export const store = configureStore({
   reducer: {
@@ -9,10 +9,10 @@ export const store = configureStore({
 
 // Infer the type of `store`
 export type AppStore = typeof store
-export type RootState = ReturnType<AppStore["getState"]>
+export type RootState = ReturnType<AppStore['getState']>
 
 // Infer the `AppDispatch` type from the store itself
-export type AppDispatch = AppStore["dispatch"]
+export type AppDispatch = AppStore['dispatch']
 
 // Define a reusable type describing thunk functions
 export type AppThunk<ThunkReturnType = void> = ThunkAction<

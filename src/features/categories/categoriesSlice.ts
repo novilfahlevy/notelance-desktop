@@ -1,6 +1,6 @@
-import { RootState } from "@/app/store"
-import { Category } from "@/types/data-models"
-import { createSlice, PayloadAction } from "@reduxjs/toolkit"
+import { RootState } from '@/app/store'
+import { Category } from '@/types/data-models'
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 interface CategoriesState {
   selectedCategory: Category | null

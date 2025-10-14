@@ -1,7 +1,7 @@
-import { useAppDispatch } from "@/app/hooks"
-import { Category } from "@/types/data-models"
-import { ReactElement, useEffect, useState } from "react"
-import { setSelectedCategory } from "./categoriesSlice"
+import { useAppDispatch } from '@/app/hooks'
+import { Category } from '@/types/data-models'
+import { ReactElement, useEffect, useState } from 'react'
+import { setSelectedCategory } from './categoriesSlice'
 
 import {
   Tag,
@@ -14,7 +14,7 @@ import {
   GripVertical,
   Plus,
   CheckSquare,
-} from "lucide-react"
+} from 'lucide-react'
 
 export default function CategoriesPanel(): ReactElement {
   const dispatch = useAppDispatch()
@@ -46,9 +46,9 @@ export default function CategoriesPanel(): ReactElement {
       })
     }
 
-    window.addEventListener("resize", handleResize)
+    window.addEventListener('resize', handleResize)
     handleResize()
-    return () => window.removeEventListener("resize", handleResize)
+    return () => window.removeEventListener('resize', handleResize)
   }, [])
 
   useEffect(() => {
@@ -67,12 +67,12 @@ export default function CategoriesPanel(): ReactElement {
   return (
     <aside
       className={`border-r border-border-default bg-surface transition-all duration-300 flex flex-col justify-between
-        ${isCategoriesPanelOpen ? "w-[260px] px-5" : "w-[80px] px-3"} py-5`}
+        ${isCategoriesPanelOpen ? 'w-[260px] px-5' : 'w-[80px] px-3'} py-5`}
     >
       <div>
         {/* Header */}
         <div
-          className={`flex items-center ${isCategoriesPanelOpen ? "justify-between" : "justify-center"} mb-10`}
+          className={`flex items-center ${isCategoriesPanelOpen ? 'justify-between' : 'justify-center'} mb-10`}
         >
           {isCategoriesPanelOpen && (
             <h1 className="font-bold text-xl text-primary-500 tracking-tight select-none">
@@ -97,7 +97,7 @@ export default function CategoriesPanel(): ReactElement {
           <li
             onClick={() => handleSelectCategory(null)}
             className={`flex items-center ${
-              isCategoriesPanelOpen ? "justify-between" : "justify-center"
+              isCategoriesPanelOpen ? 'justify-between' : 'justify-center'
             } rounded-lg cursor-pointer p-3 hover:bg-accent-800/20 transition-all duration-150 select-none`}
           >
             <div className="flex items-center gap-x-3">
@@ -116,7 +116,7 @@ export default function CategoriesPanel(): ReactElement {
                 key={category.id}
                 onClick={() => !isManaging && handleSelectCategory(category)}
                 className={`flex items-center ${
-                  isCategoriesPanelOpen ? "justify-between" : "justify-center"
+                  isCategoriesPanelOpen ? 'justify-between' : 'justify-center'
                 } rounded-lg cursor-pointer p-3 hover:bg-accent-800/20 transition-all duration-150 select-none group`}
               >
                 <div className="flex items-center gap-x-3">
@@ -173,10 +173,10 @@ export default function CategoriesPanel(): ReactElement {
           <button
             onClick={handleToggleManageCategories}
             className={`flex items-center justify-center gap-x-2 mt-auto py-2 px-3 rounded-md border border-border-default transition-all select-none outline-0 cursor-pointer w-full
-                ${isManaging ? "bg-accent-500" : "hover:border-accent-500 hover:text-accent-500"}`}
+                ${isManaging ? 'bg-accent-500' : 'hover:border-accent-500 hover:text-accent-500'}`}
           >
             {isManaging ? <CheckSquare size={18} /> : <Tags size={18} />}
-            {isManaging ? "Selesai" : "Atur Kategori"}
+            {isManaging ? 'Selesai' : 'Atur Kategori'}
           </button>
         )}
       </div>

@@ -1,4 +1,6 @@
+// eslint-disable-next-line import/no-named-as-default
 import sqlite3 from 'sqlite3'
+
 import LocalDatabase from '../localDatabase'
 import type { Category } from '../types/data-models'
 
@@ -9,19 +11,19 @@ export class CategoryLocalRepository {
     this.db = LocalDatabase.load()
   }
 
-  private _run(sql: string, params: any[] = []): Promise<void> {
+  private _run(sql: string, params: unknown[] = []): Promise<void> {
     return new Promise((resolve, reject) => {
       this.db.run(sql, params, (err) => (err ? reject(err) : resolve()))
     })
   }
 
-  private _get<T>(sql: string, params: any[] = []): Promise<T | undefined> {
+  private _get<T>(sql: string, params: unknown[] = []): Promise<T | undefined> {
     return new Promise((resolve, reject) => {
       this.db.get(sql, params, (err, row) => (err ? reject(err) : resolve(row as T)))
     })
   }
 
-  private _all<T>(sql: string, params: any[] = []): Promise<T[]> {
+  private _all<T>(sql: string, params: unknown[] = []): Promise<T[]> {
     return new Promise((resolve, reject) => {
       this.db.all(sql, params, (err, rows) => (err ? reject(err) : resolve(rows as T[])))
     })
@@ -33,27 +35,27 @@ export class CategoryLocalRepository {
 
   async get(): Promise<Category[]> {
     return await this._all<Category>(
-      `SELECT * FROM categories WHERE is_deleted != 1 ORDER BY order_index ASC`
+      'SELECT * FROM categories WHERE is_deleted != 1 ORDER BY order_index ASC'
     )
   }
 
   async getByName(name: string): Promise<Category | undefined> {
     return await this._get<Category>(
-      `SELECT * FROM categories WHERE LOWER(name) = LOWER(?) AND is_deleted != 1 LIMIT 1`,
+      'SELECT * FROM categories WHERE LOWER(name) = LOWER(?) AND is_deleted != 1 LIMIT 1',
       [name.trim()]
     )
   }
 
   async getById(id: number): Promise<Category | undefined> {
     return await this._get<Category>(
-      `SELECT * FROM categories WHERE id = ? AND is_deleted != 1 LIMIT 1`,
+      'SELECT * FROM categories WHERE id = ? AND is_deleted != 1 LIMIT 1',
       [id]
     )
   }
 
   async getByRemoteId(remoteId: number): Promise<Category | undefined> {
     return await this._get<Category>(
-      `SELECT * FROM categories WHERE remote_id = ? AND is_deleted != 1 LIMIT 1`,
+      'SELECT * FROM categories WHERE remote_id = ? AND is_deleted != 1 LIMIT 1',
       [remoteId]
     )
   }
@@ -93,7 +95,7 @@ export class CategoryLocalRepository {
 
   private async getNextOrder(): Promise<number> {
     const result = await this._get<{ next_order: number }>(
-      `SELECT COALESCE(MAX(order_index), -1) + 1 AS next_order FROM categories`
+      'SELECT COALESCE(MAX(order_index), -1) + 1 AS next_order FROM categories'
     )
     return result?.next_order ?? 0
   }
@@ -117,7 +119,7 @@ export class CategoryLocalRepository {
     }
   ): Promise<Category> {
     const updates: string[] = []
-    const params: any[] = []
+    const params: unknown[] = []
 
     if (name !== undefined) {
       updates.push('name = ?')
@@ -161,7 +163,7 @@ export class CategoryLocalRepository {
     await new Promise<void>((resolve, reject) => {
       this.db.serialize(() => {
         const stmt = this.db.prepare(
-          `UPDATE categories SET order_index = ?, updated_at = ? WHERE id = ?`
+          'UPDATE categories SET order_index = ?, updated_at = ? WHERE id = ?'
         )
 
         try {
@@ -182,13 +184,13 @@ export class CategoryLocalRepository {
 
     // Detach notes
     await this._run(
-      `UPDATE notes SET category_id = NULL, updated_at = ? WHERE category_id = ?`,
+      'UPDATE notes SET category_id = NULL, updated_at = ? WHERE category_id = ?',
       [now, categoryId]
     )
 
     // Soft delete category
     await this._run(
-      `UPDATE categories SET is_deleted = 1, updated_at = ? WHERE id = ?`,
+      'UPDATE categories SET is_deleted = 1, updated_at = ? WHERE id = ?',
       [now, categoryId]
     )
   }
@@ -197,19 +199,19 @@ export class CategoryLocalRepository {
     const now = new Date().toUTCString()
 
     await this._run(
-      `UPDATE notes SET category_id = NULL, updated_at = ? WHERE category_id = ?`,
+      'UPDATE notes SET category_id = NULL, updated_at = ? WHERE category_id = ?',
       [now, id]
     )
-    await this._run(`DELETE FROM categories WHERE id = ?`, [id])
+    await this._run('DELETE FROM categories WHERE id = ?', [id])
   }
 
   async getWithTrashed(): Promise<Category[]> {
-    return await this._all<Category>(`SELECT * FROM categories WHERE is_deleted IN (0, 1)`)
+    return await this._all<Category>('SELECT * FROM categories WHERE is_deleted IN (0, 1)')
   }
 
   async getNotesCount(categoryId: number): Promise<number> {
     const result = await this._get<{ count: number }>(
-      `SELECT COUNT(*) as count FROM notes WHERE category_id = ? AND is_deleted != 1`,
+      'SELECT COUNT(*) as count FROM notes WHERE category_id = ? AND is_deleted != 1',
       [categoryId]
     )
     return result?.count ?? 0
