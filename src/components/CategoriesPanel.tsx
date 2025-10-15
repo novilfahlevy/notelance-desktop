@@ -1,7 +1,7 @@
 import { useAppDispatch } from '@/app/hooks'
 import { Category } from '@/types/data-models'
 import { ReactElement, SyntheticEvent, useEffect, useState } from 'react'
-import { setSelectedCategory } from '../slices/categoriesSlice'
+import { setSelectedCategory } from '@/slices/categoriesSlice'
 
 import {
   Tag,
@@ -44,6 +44,7 @@ export default function CategoriesPanel(): ReactElement {
   useEffect(() => {
     const handleResize = () => {
       const isSmall = window.innerWidth <= 1024
+
       setIfWindowSmallerThanLg((prevIsSmall) => {
         if (isSmall && !prevIsSmall) {
           openCategoriesPanel(false)
@@ -58,7 +59,6 @@ export default function CategoriesPanel(): ReactElement {
 
     window.addEventListener('resize', handleResize)
     handleResize()
-
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
@@ -125,14 +125,14 @@ export default function CategoriesPanel(): ReactElement {
     
     if (!draggedCategory || draggedCategory.id === targetCategory.id) return
 
-    const draggedCategoryIndex = categories.findIndex(cat => cat.id === draggedCategory.id)
-    const targetCategoryIndex = categories.findIndex(cat => cat.id === targetCategory.id)
+    const draggedIndex = categories.findIndex(cat => cat.id === draggedCategory.id)
+    const targetIndex = categories.findIndex(cat => cat.id === targetCategory.id)
 
-    if (draggedCategoryIndex === -1 || targetCategoryIndex === -1) return
+    if (draggedIndex === -1 || targetIndex === -1) return
 
     const newCategories = [...categories]
-    newCategories.splice(draggedCategoryIndex, 1)
-    newCategories.splice(targetCategoryIndex, 0, draggedCategory)
+    newCategories.splice(draggedIndex, 1)
+    newCategories.splice(targetIndex, 0, draggedCategory)
 
     setCategories(newCategories)
   }
@@ -147,7 +147,8 @@ export default function CategoriesPanel(): ReactElement {
 
   return (
     <aside
-      className={`border-r border-border-default bg-surface transition-all duration-300 flex flex-col justify-between ${isCategoriesPanelOpen ? 'w-[260px] px-5' : 'w-[80px] px-3'} py-5`}
+      className={`border-r border-border-default bg-surface transition-all duration-300 flex flex-col justify-between
+        ${isCategoriesPanelOpen ? 'w-[260px] px-5' : 'w-[80px] px-3'} py-5`}
     >
       <div>
         {/* Header */}
@@ -159,18 +160,16 @@ export default function CategoriesPanel(): ReactElement {
               Notelance
             </h1>
           )}
-          {!isManaging && (
-            <button
-              onClick={toggleCategoriesPanel}
-              className="text-muted hover:text-accent-500 transition-colors cursor-pointer outline-0"
-            >
-              {isCategoriesPanelOpen ? (
-                <PanelRightOpen size={22} />
-              ) : (
-                <PanelLeftOpen size={22} />
-              )}
-            </button>
-          )}
+          <button
+            onClick={toggleCategoriesPanel}
+            className="text-text-muted hover:text-accent-500 transition-colors cursor-pointer outline-0"
+          >
+            {isCategoriesPanelOpen ? (
+              <PanelRightOpen size={22} />
+            ) : (
+              <PanelLeftOpen size={22} />
+            )}
+          </button>
         </div>
 
         {/* Categories List */}
@@ -201,7 +200,10 @@ export default function CategoriesPanel(): ReactElement {
                 onDragOver={(e) => handleDragOver(e, category)}
                 onDragEnd={handleDragEnd}
                 onClick={() => !isManaging && handleSelectCategory(category)}
-                className={`flex items-center ${isCategoriesPanelOpen ? 'justify-between' : 'justify-center'} rounded-lg cursor-pointer p-3 hover:bg-accent-800/20 transition-all duration-150 select-none group ${draggedCategory?.id === category.id ? 'opacity-50' : ''}`}
+                className={`flex items-center ${
+                  isCategoriesPanelOpen ? 'justify-between' : 'justify-center'
+                } rounded-lg cursor-pointer p-3 hover:bg-accent-800/20 transition-all duration-150 select-none group
+                ${draggedCategory?.id === category.id ? 'opacity-50' : ''}`}
               >
                 {editingCategoryId === category.id ? (
                   // Edit mode
@@ -221,13 +223,13 @@ export default function CategoriesPanel(): ReactElement {
                     <div className="flex items-center gap-x-1">
                       <button
                         onClick={() => handleSaveEdit(category.id)}
-                        className="text-green-500 hover:text-green-400 cursor-pointer p-1"
+                        className="text-green-500 hover:text-green-400 p-1"
                       >
                         <Check size={16} />
                       </button>
                       <button
                         onClick={handleCancelEdit}
-                        className="text-red-500 hover:text-red-400 cursor-pointer p-1"
+                        className="text-red-500 hover:text-red-400 p-1"
                       >
                         <X size={16} />
                       </button>
@@ -308,7 +310,8 @@ export default function CategoriesPanel(): ReactElement {
         {isCategoriesPanelOpen && (
           <button
             onClick={handleToggleManageCategories}
-            className={`flex items-center justify-center gap-x-2 mt-auto py-2 px-3 rounded-md border border-border-default transition-all select-none outline-0 cursor-pointer w-full ${isManaging ? 'bg-accent-500' : 'hover:border-accent-500 hover:text-accent-500'}`}
+            className={`flex items-center justify-center gap-x-2 mt-auto py-2 px-3 rounded-md border border-border-default transition-all select-none outline-0 cursor-pointer w-full
+                ${isManaging ? 'bg-accent-500' : 'hover:border-accent-500 hover:text-accent-500'}`}
           >
             {isManaging ? <CheckSquare size={18} /> : <Tags size={18} />}
             {isManaging ? 'Selesai' : 'Atur Kategori'}

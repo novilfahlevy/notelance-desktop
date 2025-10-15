@@ -13,12 +13,12 @@ import CategoriesPanel from '@/components/CategoriesPanel'
 
 export default function App(): ReactElement {
   return (
-    <div className="min-h-screen flex bg-main text-white">
+    <div className="min-h-screen max-h-screen h-screen flex bg-main text-white">
       {/* Categories Sidebar */}
       <CategoriesPanel />
 
       {/* Notes List */}
-      <main className="border-r border-border-default bg-surface flex-1 transition-all duration-300 px-6 py-6">
+      <main className="border-r border-border-default bg-surface flex-1 transition-all duration-300 overflow-y-scroll">
         <NotesPanel />
       </main>
 

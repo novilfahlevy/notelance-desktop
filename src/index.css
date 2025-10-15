@@ -45,7 +45,7 @@
 @layer base {
   html, body {
     font-family: var(--font-body);
-    @apply bg-main text-text-primary antialiased min-h-screen;
+    @apply bg-main text-text-primary antialiased min-h-screen max-h-screen h-screen;
   }
 
   h1, h2, h3, h4, h5, h6 {
