@@ -9,7 +9,7 @@ import '@fontsource/manrope/700.css'
 import './index.css'
 
 import { NotesPanel } from './components/NotesPanel'
-import CategoriesPanel from '@/features/categories/CategoriesPanel'
+import CategoriesPanel from '@/components/CategoriesPanel'
 
 export default function App(): ReactElement {
   return (

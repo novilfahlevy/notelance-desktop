@@ -1,7 +1,7 @@
 import { useAppDispatch } from '@/app/hooks'
 import { Category } from '@/types/data-models'
 import { ReactElement, SyntheticEvent, useEffect, useState } from 'react'
-import { setSelectedCategory } from './categoriesSlice'
+import { setSelectedCategory } from '../slices/categoriesSlice'
 
 import {
   Tag,
