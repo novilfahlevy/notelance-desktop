@@ -70,7 +70,7 @@ export class CategoryLocalRepository {
     remoteId?: number
   }): Promise<Category> {
     const now = new Date().toUTCString()
-    const order = orderIndex ?? (await this.getNextOrder())
+    const order = orderIndex ?? (await this._getNextOrder())
 
     const sql = `
       INSERT INTO categories (name, order_index, remote_id, created_at, updated_at)
@@ -93,7 +93,7 @@ export class CategoryLocalRepository {
     })
   }
 
-  private async getNextOrder(): Promise<number> {
+  private async _getNextOrder(): Promise<number> {
     const result = await this._get<{ next_order: number }>(
       'SELECT COALESCE(MAX(order_index), -1) + 1 AS next_order FROM categories'
     )

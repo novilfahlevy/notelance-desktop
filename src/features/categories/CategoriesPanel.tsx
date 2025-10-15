@@ -1,6 +1,6 @@
 import { useAppDispatch } from '@/app/hooks'
 import { Category } from '@/types/data-models'
-import { ReactElement, useEffect, useState } from 'react'
+import { ReactElement, SyntheticEvent, useEffect, useState } from 'react'
 import { setSelectedCategory } from './categoriesSlice'
 
 import {
@@ -14,6 +14,8 @@ import {
   GripVertical,
   Plus,
   CheckSquare,
+  X,
+  Check,
 } from 'lucide-react'
 
 export default function CategoriesPanel(): ReactElement {
@@ -23,17 +25,25 @@ export default function CategoriesPanel(): ReactElement {
   const toggleCategoriesPanel = () => openCategoriesPanel(!isCategoriesPanelOpen)
 
   const [isManaging, setIsManaging] = useState<boolean>(false)
-  const handleToggleManageCategories = () => setIsManaging(!isManaging)
+  const handleToggleManageCategories = () => {
+    setIsManaging(!isManaging)
+    setEditingCategoryId(null)
+    setEditingCategoryName('')
+  }
 
   const [categories, setCategories] = useState<Category[]>([])
+  const [draggedCategory, setDraggedCategory] = useState<Category | null>(null)
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isWindowSmallerThanLg, setIfWindowSmallerThanLg] = useState<boolean>(false)
 
+  // Edit state
+  const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null)
+  const [editingCategoryName, setEditingCategoryName] = useState<string>('')
+
   useEffect(() => {
     const handleResize = () => {
       const isSmall = window.innerWidth <= 1024
-
       setIfWindowSmallerThanLg((prevIsSmall) => {
         if (isSmall && !prevIsSmall) {
           openCategoriesPanel(false)
@@ -48,6 +58,7 @@ export default function CategoriesPanel(): ReactElement {
 
     window.addEventListener('resize', handleResize)
     handleResize()
+
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
@@ -63,11 +74,80 @@ export default function CategoriesPanel(): ReactElement {
   const handleSelectCategory = (category: Category | null) => {
     dispatch(setSelectedCategory(category))
   }
-  
+
+  // Create new category
+  const [newCategoryName, setNewCategoryName] = useState<string>('')
+  const handleChangeCategoryName = (event: SyntheticEvent) => {
+    setNewCategoryName((event.target as HTMLInputElement).value)
+  }
+  const handleSubmitNewCategory = async (event: SyntheticEvent) => {
+    event.preventDefault()
+    if (!newCategoryName.trim()) return
+    
+    const newCategory: Category = await window.localDatabase.addCategory(newCategoryName.trim())
+    setCategories([...categories, newCategory])
+    setNewCategoryName('')
+  }
+
+  // Edit category
+  const handleStartEdit = (category: Category) => {
+    setEditingCategoryId(category.id)
+    setEditingCategoryName(category.name)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingCategoryId(null)
+    setEditingCategoryName('')
+  }
+
+  const handleSaveEdit = async (categoryId: number) => {
+    if (!editingCategoryName.trim()) return
+    
+    const updatedCategory = await window.localDatabase.updateCategory(categoryId, editingCategoryName.trim())
+    setCategories(categories.map(cat => cat.id === categoryId ? updatedCategory : cat))
+    setEditingCategoryId(null)
+    setEditingCategoryName('')
+  }
+
+  // Delete category
+  const handleDeleteCategory = async (categoryId: number) => {
+    await window.localDatabase.deleteCategory(categoryId)
+    setCategories(categories.filter(cat => cat.id !== categoryId))
+  }
+
+  // Drag and drop handlers
+  const handleDragStart = (category: Category) => {
+    setDraggedCategory(category)
+  }
+
+  const handleDragOver = (e: React.DragEvent, targetCategory: Category) => {
+    e.preventDefault()
+    
+    if (!draggedCategory || draggedCategory.id === targetCategory.id) return
+
+    const draggedCategoryIndex = categories.findIndex(cat => cat.id === draggedCategory.id)
+    const targetCategoryIndex = categories.findIndex(cat => cat.id === targetCategory.id)
+
+    if (draggedCategoryIndex === -1 || targetCategoryIndex === -1) return
+
+    const newCategories = [...categories]
+    newCategories.splice(draggedCategoryIndex, 1)
+    newCategories.splice(targetCategoryIndex, 0, draggedCategory)
+
+    setCategories(newCategories)
+  }
+
+  const handleDragEnd = async () => {
+    if (draggedCategory) {
+      // Save the new order to database
+      await window.localDatabase.reorderCategories(categories)
+      setDraggedCategory(null)
+    }
+  }
+
   return (
     <aside
-      className={`border-r border-border-default bg-surface transition-all duration-300 flex flex-col justify-between
-        ${isCategoriesPanelOpen ? 'w-[260px] px-5' : 'w-[80px] px-3'} py-5`}
+      className={`border-r border-border-default bg-surface transition-all duration-300 flex flex-col justify-between ${isCategoriesPanelOpen ? 'w-[260px] px-5' : 'w-[80px] px-3'} py-5`}
     >
       <div>
         {/* Header */}
@@ -79,16 +159,18 @@ export default function CategoriesPanel(): ReactElement {
               Notelance
             </h1>
           )}
-          <button
-            onClick={toggleCategoriesPanel}
-            className="text-text-muted hover:text-accent-500 transition-colors cursor-pointer outline-0"
-          >
-            {isCategoriesPanelOpen ? (
-              <PanelRightOpen size={22} />
-            ) : (
-              <PanelLeftOpen size={22} />
-            )}
-          </button>
+          {!isManaging && (
+            <button
+              onClick={toggleCategoriesPanel}
+              className="text-muted hover:text-accent-500 transition-colors cursor-pointer outline-0"
+            >
+              {isCategoriesPanelOpen ? (
+                <PanelRightOpen size={22} />
+              ) : (
+                <PanelLeftOpen size={22} />
+              )}
+            </button>
+          )}
         </div>
 
         {/* Categories List */}
@@ -114,38 +196,90 @@ export default function CategoriesPanel(): ReactElement {
             categories.map((category: Category) => (
               <li
                 key={category.id}
+                draggable={isManaging && editingCategoryId !== category.id}
+                onDragStart={() => handleDragStart(category)}
+                onDragOver={(e) => handleDragOver(e, category)}
+                onDragEnd={handleDragEnd}
                 onClick={() => !isManaging && handleSelectCategory(category)}
-                className={`flex items-center ${
-                  isCategoriesPanelOpen ? 'justify-between' : 'justify-center'
-                } rounded-lg cursor-pointer p-3 hover:bg-accent-800/20 transition-all duration-150 select-none group`}
+                className={`flex items-center ${isCategoriesPanelOpen ? 'justify-between' : 'justify-center'} rounded-lg cursor-pointer p-3 hover:bg-accent-800/20 transition-all duration-150 select-none group ${draggedCategory?.id === category.id ? 'opacity-50' : ''}`}
               >
-                <div className="flex items-center gap-x-3">
-                  <Tag className="text-accent-400" size={18} />
-                  {isCategoriesPanelOpen && (
-                    <p className="text-base">{category.name}</p>
-                  )}
-                </div>
-
-                {/* Management buttons */}
-                {isCategoriesPanelOpen && isManaging ? (
-                  <div className="flex items-center gap-x-2">
-                    <Pencil
-                      size={16}
-                      className="text-text-muted cursor-pointer hover:text-accent-400"
+                {editingCategoryId === category.id ? (
+                  // Edit mode
+                  <div className="flex items-center gap-x-2 flex-1">
+                    <Tag className="text-accent-400" size={18} />
+                    <input
+                      type="text"
+                      value={editingCategoryName}
+                      onChange={(e) => setEditingCategoryName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSaveEdit(category.id)
+                        if (e.key === 'Escape') handleCancelEdit()
+                      }}
+                      className="w-full bg-transparent border-b border-accent-500 outline-none text-base px-1"
+                      autoFocus
                     />
-                    <Trash
-                      size={16}
-                      className="text-text-muted cursor-pointer hover:text-red-500"
-                    />
-                    <GripVertical
-                      size={16}
-                      className="text-text-muted cursor-grab hover:text-accent-400"
-                    />
+                    <div className="flex items-center gap-x-1">
+                      <button
+                        onClick={() => handleSaveEdit(category.id)}
+                        className="text-green-500 hover:text-green-400 cursor-pointer p-1"
+                      >
+                        <Check size={16} />
+                      </button>
+                      <button
+                        onClick={handleCancelEdit}
+                        className="text-red-500 hover:text-red-400 cursor-pointer p-1"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
                   </div>
                 ) : (
-                  isCategoriesPanelOpen && (
-                    <span className="text-accent-300 text-sm">0</span>
-                  )
+                  <>
+                    <div className="flex items-center gap-x-3">
+                      <Tag className="text-accent-400" size={18} />
+                      {isCategoriesPanelOpen && (
+                        <p className="text-base">{category.name}</p>
+                      )}
+                    </div>
+
+                    {/* Management buttons */}
+                    {isCategoriesPanelOpen && isManaging ? (
+                      <div className="flex items-center gap-x-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleStartEdit(category)
+                          }}
+                        >
+                          <Pencil
+                            size={16}
+                            className="text-text-muted cursor-pointer hover:text-accent-400"
+                          />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDeleteCategory(category.id)
+                          }}
+                        >
+                          <Trash
+                            size={16}
+                            className="text-text-muted cursor-pointer hover:text-red-500"
+                          />
+                        </button>
+                        <div className="cursor-grab hover:cursor-grabbing">
+                          <GripVertical
+                            size={16}
+                            className="text-text-muted hover:text-accent-400"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      isCategoriesPanelOpen && (
+                        <span className="text-accent-300 text-sm">0</span>
+                      )
+                    )}
+                  </>
                 )}
               </li>
             ))}
@@ -154,26 +288,27 @@ export default function CategoriesPanel(): ReactElement {
 
       <div className="flex flex-col gap-y-3">
         {isCategoriesPanelOpen && isManaging && (
-          <div className="flex items-center w-full border border-border-default rounded-md overflow-hidden focus-within:border-accent-500 transition-all">
+          <form onSubmit={handleSubmitNewCategory} className="flex items-center w-full border border-border-default rounded-md overflow-hidden focus-within:border-accent-500 transition-all">
             <input
               type="text"
               placeholder="Tambah Kategori"
+              value={newCategoryName}
+              onChange={handleChangeCategoryName}
               className="w-[80%] bg-transparent px-3 py-2 text-sm outline-none text-white placeholder-text-muted"
             />
-            <button className="flex-1 flex justify-end transition-colors cursor-pointer pr-2">
+            <button type="submit" className="flex-1 flex justify-end transition-colors cursor-pointer pr-2">
               <div className="hover:bg-accent-400 rounded-full p-1 transition-all duration-300">
                 <Plus size={18} />
               </div>
             </button>
-          </div>
+          </form>
         )}
 
         {/* Manage Categories Button */}
         {isCategoriesPanelOpen && (
           <button
             onClick={handleToggleManageCategories}
-            className={`flex items-center justify-center gap-x-2 mt-auto py-2 px-3 rounded-md border border-border-default transition-all select-none outline-0 cursor-pointer w-full
-                ${isManaging ? 'bg-accent-500' : 'hover:border-accent-500 hover:text-accent-500'}`}
+            className={`flex items-center justify-center gap-x-2 mt-auto py-2 px-3 rounded-md border border-border-default transition-all select-none outline-0 cursor-pointer w-full ${isManaging ? 'bg-accent-500' : 'hover:border-accent-500 hover:text-accent-500'}`}
           >
             {isManaging ? <CheckSquare size={18} /> : <Tags size={18} />}
             {isManaging ? 'Selesai' : 'Atur Kategori'}
