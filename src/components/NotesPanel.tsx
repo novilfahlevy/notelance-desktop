@@ -1,56 +1,54 @@
-import { ReactElement, useEffect, useState } from 'react'
+import { ReactElement, useEffect } from 'react'
 import { Clock, Search, FileText, Plus } from 'lucide-react'
 import { Note } from '@/types/data-models'
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
-import { setSelectedNote } from '@/slices/notesSlice'
+import { 
+  setSelectedNote, 
+  fetchNotes, 
+  searchNotes as searchNotesAction,
+  createNote as createNoteAction,
+  setSearchQuery,
+  selectNotes,
+  selectSearchQuery,
+  selectIsSearching,
+  selectIsLoading,
+  clearSearch
+} from '@/slices/notesSlice'
 
 export function NotesPanel(): ReactElement {
   const dispatch = useAppDispatch()
+  const notes = useAppSelector(selectNotes)
+  const searchQuery = useAppSelector(selectSearchQuery)
+  const isSearching = useAppSelector(selectIsSearching)
+  const isLoading = useAppSelector(selectIsLoading)
+  const selectedCategory = useAppSelector((state) => state.categories.selectedCategory)
+
   const handleSelectNote = (note: Note) => {
     dispatch(setSelectedNote(note))
   }
 
-  const [notes, setNotes] = useState<Note[]>([])
-  const [searchQuery, setSearchQuery] = useState<string>('')
-  const [isSearching, setIsSearching] = useState<boolean>(false)
-  
-  const selectedCategory = useAppSelector((state) => state.categories.selectedCategory)
-
   const handleCreateNote = async () => {
-    const newNote = await window.localDatabase.createNote({
+    dispatch(createNoteAction({
       title: 'Untitled Note',
       content: '',
       categoryId: selectedCategory?.id ?? null,
-    })
-    setNotes([newNote, ...notes])
+    }))
   }
 
   useEffect(() => {
-    fetchNotes()
-  }, [selectedCategory])
-
-  const fetchNotes = async () => {
-    if (selectedCategory) {
-      const fetchedNotes = await window.localDatabase.fetchNotesByCategory(selectedCategory.id)
-      setNotes(fetchedNotes)
-    } else {
-      const fetchedNotes = await window.localDatabase.fetchNotes()
-      setNotes(fetchedNotes)
-    }
-  }
+    dispatch(fetchNotes(selectedCategory?.id))
+  }, [dispatch, selectedCategory])
 
   const handleSearch = async (query: string) => {
-    setSearchQuery(query)
+    dispatch(setSearchQuery(query))
     
     if (query.trim() === '') {
-      setIsSearching(false)
-      fetchNotes()
+      dispatch(clearSearch())
+      dispatch(fetchNotes(selectedCategory?.id))
       return
     }
 
-    setIsSearching(true)
-    const searchResults = await window.localDatabase.searchNotes(query.trim())
-    setNotes(searchResults)
+    dispatch(searchNotesAction(query.trim()))
   }
 
   const formatTimeAgo = (dateString: string | Date | undefined): string => {
@@ -69,18 +67,6 @@ export function NotesPanel(): ReactElement {
     if (diffDays < 7) return `${diffDays}d ago`
     
     return date.toLocaleDateString()
-  }
-
-  const stripHtmlAndTruncate = (html: string, maxLength = 150): string => {
-    // Create a temporary div to parse HTML
-    const temp = document.createElement('div')
-    temp.innerHTML = html
-    
-    // Get text content without HTML tags
-    const text = temp.textContent || temp.innerText || ''
-    
-    if (text.length <= maxLength) return text
-    return text.substring(0, maxLength) + '...'
   }
 
   return (
@@ -105,7 +91,8 @@ export function NotesPanel(): ReactElement {
         {/* Create Note Button */}
         <button
           onClick={handleCreateNote}
-          className="flex items-center gap-x-2 bg-accent-500 hover:bg-accent-600 text-white px-4 py-2 rounded-md transition-colors whitespace-nowrap font-medium cursor-pointer"
+          disabled={isLoading}
+          className="flex items-center gap-x-2 bg-accent-500 hover:bg-accent-600 text-white px-4 py-2 rounded-md transition-colors whitespace-nowrap font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Plus size={18} />
           Buat Catatan
@@ -128,8 +115,15 @@ export function NotesPanel(): ReactElement {
           </div>
         )}
 
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex justify-center py-16">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-500"></div>
+          </div>
+        )}
+
         {/* Notes List */}
-        {notes.length === 0 ? (
+        {!isLoading && notes.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <FileText size={48} className="text-text-muted mb-4" />
             <p className="text-text-muted text-lg mb-2">
@@ -141,7 +135,7 @@ export function NotesPanel(): ReactElement {
                 : 'Mulai buat catatan pertamamu'}
             </p>
           </div>
-        ) : (
+        ) : !isLoading ? (
           <ul className="flex flex-col gap-y-5">
             {notes.map((note: Note) => (
               <li
@@ -162,8 +156,72 @@ export function NotesPanel(): ReactElement {
               </li>
             ))}
           </ul>
-        )}
+        ) : null}
       </div>
+
+      <style>{`
+        .prose-preview {
+          overflow: hidden;
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+        }
+
+        .prose-preview h1,
+        .prose-preview h2,
+        .prose-preview h3 {
+          font-size: 0.875rem;
+          font-weight: 600;
+          margin: 0;
+          color: rgba(255, 255, 255, 0.9);
+        }
+
+        .prose-preview p {
+          margin: 0;
+          line-height: 1.5;
+        }
+
+        .prose-preview ul,
+        .prose-preview ol {
+          margin: 0;
+          padding-left: 1.25rem;
+          line-height: 1.5;
+        }
+
+        .prose-preview li {
+          margin: 0;
+        }
+
+        .prose-preview strong {
+          font-weight: 600;
+          color: rgba(255, 255, 255, 0.95);
+        }
+
+        .prose-preview em {
+          font-style: italic;
+        }
+
+        .prose-preview a {
+          color: #ffca28;
+          text-decoration: none;
+        }
+
+        .prose-preview * {
+          display: inline;
+        }
+
+        .prose-preview br {
+          display: none;
+        }
+
+        .prose-preview h1::after,
+        .prose-preview h2::after,
+        .prose-preview h3::after,
+        .prose-preview p::after,
+        .prose-preview li::after {
+          content: ' ';
+        }
+      `}</style>
     </div>
   )
 }

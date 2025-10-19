@@ -16,8 +16,8 @@ import {
   Underline,
   LoaderCircle
 } from 'lucide-react'
-import { useAppSelector } from '@/app/hooks'
-import { selectSelectedNote } from '@/slices/notesSlice'
+import { useAppDispatch, useAppSelector } from '@/app/hooks'
+import { selectSelectedNote, updateNote as updateNoteAction, deleteNote as deleteNoteAction } from '@/slices/notesSlice'
 import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 
@@ -170,10 +170,12 @@ const MenuBar = ({
   )
 }
 
-export default function NotesEditor() {
+export default function NotesEditorPanel() {
+  const dispatch = useAppDispatch()
   const selectedNote = useAppSelector(selectSelectedNote)
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [title, setTitle] = useState('')
 
   const editor = useEditor({
     extensions: [
@@ -194,52 +196,13 @@ export default function NotesEditor() {
     },
   })
 
-  // Update editor content when selectedNote changes
+  // Update editor content and title when selectedNote changes
   useEffect(() => {
     if (editor && selectedNote) {
       editor.commands.setContent(selectedNote.content || '')
+      setTitle(selectedNote.title || '')
     }
   }, [selectedNote, editor])
-
-  const handleDelete = async () => {
-    if (!selectedNote) return
-
-    if (window.confirm('Apakah Anda yakin ingin menghapus catatan ini?')) {
-      setIsDeleting(true)
-      try {
-        await window.localDatabase.deleteNote(selectedNote.id)
-        toast.success('Catatan berhasil dihapus')
-        // You might want to dispatch an action here to update the UI
-        // or trigger a refresh of the notes list
-      } catch (error) {
-        console.error('Gagal menghapus catatan:', error)
-        toast.error('Gagal menghapus catatan')
-      } finally {
-        setIsDeleting(false)
-      }
-    }
-  }
-
-  const [title, setTitle] = useState(selectedNote.title)
-
-  const handleSave = async () => {
-    if (!selectedNote || !editor) return
-
-    setIsSaving(true)
-    try {
-      const content = editor.getHTML()
-      await window.localDatabase.updateNote(selectedNote.id, {
-        title: title,
-        content: content
-      })
-      toast.success('Catatan berhasil disimpan')
-    } catch (error) {
-      console.error('Gagal menyimpan catatan:', error)
-      toast.error('Gagal menyimpan catatan')
-    } finally {
-      setIsSaving(false)
-    }
-  }
 
   // Add keyboard shortcut for saving (Ctrl+S / Cmd+S)
   useEffect(() => {
@@ -253,6 +216,45 @@ export default function NotesEditor() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [selectedNote, editor, title])
+
+  const handleDelete = async () => {
+    if (!selectedNote) return
+
+    if (window.confirm('Apakah Anda yakin ingin menghapus catatan ini?')) {
+      setIsDeleting(true)
+      try {
+        await dispatch(deleteNoteAction(selectedNote.id)).unwrap()
+        toast.success('Catatan berhasil dihapus')
+      } catch (error) {
+        console.error('Gagal menghapus catatan:', error)
+        toast.error('Gagal menghapus catatan')
+      } finally {
+        setIsDeleting(false)
+      }
+    }
+  }
+
+  const handleSave = async () => {
+    if (!selectedNote || !editor) return
+
+    setIsSaving(true)
+    try {
+      const content = editor.getHTML()
+      await dispatch(updateNoteAction({ 
+        noteId: selectedNote.id, 
+        updates: {
+          title: title,
+          content: content
+        }
+      })).unwrap()
+      toast.success('Catatan berhasil disimpan')
+    } catch (error) {
+      console.error('Gagal menyimpan catatan:', error)
+      toast.error('Gagal menyimpan catatan')
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   if (!selectedNote) {
     return (

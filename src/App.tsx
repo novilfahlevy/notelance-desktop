@@ -20,7 +20,7 @@ export default function App(): ReactElement {
   const selectedNote: Note = useAppSelector(selectSelectedNote)
   return (
     <div className="min-h-screen max-h-screen h-screen flex bg-main text-white">
-      <ToastContainer position="bottom-right" />
+      <ToastContainer position="bottom-right" hideProgressBar />
 
       {/* Categories Sidebar */}
       <CategoriesPanel />
