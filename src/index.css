@@ -281,3 +281,174 @@
 .prose-preview li::after {
   content: " ";
 }
+
+/* Custom React Confirm Alert Styles */
+
+/* Override and disable default react-confirm-alert animations and blur */
+.react-confirm-alert-blur {
+  filter: none !important;
+}
+
+.react-confirm-alert-svg {
+  display: none !important;
+}
+
+.react-confirm-alert-overlay {
+  animation: fadeIn 0.15s ease-out forwards !important;
+  opacity: 1 !important;
+}
+
+.react-confirm-alert {
+  animation: none !important;
+  opacity: 1 !important;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.custom-confirm-overlay {
+  background: rgba(0, 0, 0, 0.2) !important;
+  backdrop-filter: blur(2px);
+}
+
+.custom-confirm-ui {
+  background-color: var(--color-surface, #303134);
+  border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.12));
+  border-radius: 0.75rem;
+  padding: 2rem;
+  min-width: 400px;
+  max-width: 500px;
+  box-shadow: var(--shadow-card, 0 4px 12px rgba(0, 0, 0, 0.2));
+  animation: slideIn 0.10s ease-out forwards;
+  opacity: 1;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.custom-confirm-title {
+  font-family: var(--font-heading, "Manrope", system-ui, sans-serif);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #ffffff);
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.custom-confirm-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background-color: rgba(244, 67, 54, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.custom-confirm-icon svg {
+  color: #f44336;
+}
+
+.custom-confirm-message {
+  font-family: var(--font-body, "Inter", system-ui, sans-serif);
+  font-size: 1rem;
+  color: var(--color-text-secondary, rgba(255, 255, 255, 0.7));
+  line-height: 1.6;
+  margin-bottom: 2rem;
+  padding-left: 3.25rem;
+}
+
+.custom-confirm-buttons {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.custom-confirm-button {
+  font-family: var(--font-body, "Inter", system-ui, sans-serif);
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.custom-confirm-button:focus {
+  outline: 2px solid var(--color-accent-500, #ffc107);
+  outline-offset: 2px;
+}
+
+.custom-confirm-button-cancel {
+  background-color: transparent;
+  color: var(--color-text-secondary, rgba(255, 255, 255, 0.7));
+  border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.12));
+}
+
+.custom-confirm-button-cancel:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-primary, #ffffff);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.custom-confirm-button-delete {
+  background-color: #f44336;
+  color: #ffffff;
+}
+
+.custom-confirm-button-delete:hover {
+  background-color: #d32f2f;
+  box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+}
+
+.custom-confirm-button-delete:active {
+  transform: scale(0.98);
+}
+
+.custom-confirm-button-cancel:active {
+  transform: scale(0.98);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 640px) {
+  .custom-confirm-ui {
+    min-width: auto;
+    width: calc(100vw - 2rem);
+    padding: 1.5rem;
+  }
+
+  .custom-confirm-title {
+    font-size: 1.25rem;
+  }
+
+  .custom-confirm-message {
+    font-size: 0.875rem;
+  }
+
+  .custom-confirm-buttons {
+    flex-direction: column-reverse;
+  }
+
+  .custom-confirm-button {
+    width: 100%;
+  }
+}

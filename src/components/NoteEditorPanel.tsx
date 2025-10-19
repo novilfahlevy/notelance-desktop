@@ -1,5 +1,4 @@
 import { useEditor, EditorContent, Editor } from '@tiptap/react'
-// eslint-disable-next-line import/no-named-as-default
 import StarterKit from '@tiptap/starter-kit'
 import TiptapUnderline from '@tiptap/extension-underline'
 import TiptapLink from '@tiptap/extension-link'
@@ -21,6 +20,7 @@ import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import { selectSelectedNote, updateNote as updateNoteAction, deleteNote as deleteNoteAction } from '@/slices/notesSlice'
 import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
+import { showConfirmDialog } from '@/utils/confirmDialog'
 
 const MenuBar = ({ 
   editor, 
@@ -171,7 +171,7 @@ const MenuBar = ({
   )
 }
 
-export default function NotesEditorPanel() {
+export default function NotesEditor() {
   const dispatch = useAppDispatch()
   const selectedNote = useAppSelector(selectSelectedNote)
   const [isSaving, setIsSaving] = useState(false)
@@ -221,18 +221,24 @@ export default function NotesEditorPanel() {
   const handleDelete = async () => {
     if (!selectedNote) return
 
-    if (window.confirm('Apakah Anda yakin ingin menghapus catatan ini?')) {
-      setIsDeleting(true)
-      try {
-        await dispatch(deleteNoteAction(selectedNote.id)).unwrap()
-        toast.success('Catatan berhasil dihapus')
-      } catch (error) {
-        console.error('Gagal menghapus catatan:', error)
-        toast.error('Gagal menghapus catatan')
-      } finally {
-        setIsDeleting(false)
+    showConfirmDialog({
+      title: 'Hapus Catatan',
+      message: 'Apakah Anda yakin ingin menghapus catatan ini? Tindakan ini tidak dapat dibatalkan.',
+      confirmLabel: 'Hapus',
+      cancelLabel: 'Batal',
+      onConfirm: async () => {
+        setIsDeleting(true)
+        try {
+          await dispatch(deleteNoteAction(selectedNote.id)).unwrap()
+          toast.success('Catatan berhasil dihapus')
+        } catch (error) {
+          console.error('Gagal menghapus catatan:', error)
+          toast.error('Gagal menghapus catatan')
+        } finally {
+          setIsDeleting(false)
+        }
       }
-    }
+    })
   }
 
   const handleSave = async () => {
