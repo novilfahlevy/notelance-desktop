@@ -1,4 +1,5 @@
 import { useEditor, EditorContent, Editor } from '@tiptap/react'
+// eslint-disable-next-line import/no-named-as-default
 import StarterKit from '@tiptap/starter-kit'
 import TiptapUnderline from '@tiptap/extension-underline'
 import TiptapLink from '@tiptap/extension-link'
