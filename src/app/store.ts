@@ -1,9 +1,11 @@
 import { Action, configureStore, ThunkAction } from '@reduxjs/toolkit'
 import categoriesReducer from '@/slices/categoriesSlice'
+import notesReducer from '@/slices/notesSlice'
 
 export const store = configureStore({
   reducer: {
-    categories: categoriesReducer
+    categories: categoriesReducer,
+    notes: notesReducer
   }
 })
 

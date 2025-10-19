@@ -1,9 +1,15 @@
 import { ReactElement, useEffect, useState } from 'react'
 import { Clock, Search, FileText, Plus } from 'lucide-react'
 import { Note } from '@/types/data-models'
-import { useAppSelector } from '@/app/hooks'
+import { useAppDispatch, useAppSelector } from '@/app/hooks'
+import { setSelectedNote } from '@/slices/notesSlice'
 
 export function NotesPanel(): ReactElement {
+  const dispatch = useAppDispatch()
+  const handleSelectNote = (note: Note) => {
+    dispatch(setSelectedNote(note))
+  }
+
   const [notes, setNotes] = useState<Note[]>([])
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [isSearching, setIsSearching] = useState<boolean>(false)
@@ -65,9 +71,16 @@ export function NotesPanel(): ReactElement {
     return date.toLocaleDateString()
   }
 
-  const truncateContent = (content: string, maxLength = 150): string => {
-    if (content.length <= maxLength) return content
-    return content.substring(0, maxLength) + '...'
+  const stripHtmlAndTruncate = (html: string, maxLength = 150): string => {
+    // Create a temporary div to parse HTML
+    const temp = document.createElement('div')
+    temp.innerHTML = html
+    
+    // Get text content without HTML tags
+    const text = temp.textContent || temp.innerText || ''
+    
+    if (text.length <= maxLength) return text
+    return text.substring(0, maxLength) + '...'
   }
 
   return (
@@ -130,17 +143,19 @@ export function NotesPanel(): ReactElement {
           </div>
         ) : (
           <ul className="flex flex-col gap-y-5">
-            {notes.map((note) => (
+            {notes.map((note: Note) => (
               <li
                 key={note.id}
                 className="bg-main rounded-lg p-4 border border-border-default hover:border-accent-500 transition-all cursor-pointer"
+                onClick={() => handleSelectNote(note)}
               >
                 <h4 className="text-white text-lg font-semibold mb-2">
                   {note.title || 'Untitled'}
                 </h4>
-                <p className="text-text-secondary text-sm line-clamp-3 mb-3">
-                  {truncateContent(note.content)}
-                </p>
+                <div 
+                  className="text-text-secondary text-sm line-clamp-3 mb-3 prose-preview"
+                  dangerouslySetInnerHTML={{ __html: note.content }}
+                />
                 <span className="text-text-muted text-xs flex items-center gap-x-1">
                   <Clock size={12} /> {formatTimeAgo(note.updated_at)}
                 </span>

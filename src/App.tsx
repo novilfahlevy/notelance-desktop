@@ -10,10 +10,18 @@ import './index.css'
 
 import { NotesPanel } from './components/NotesPanel'
 import CategoriesPanel from '@/components/CategoriesPanel'
+import NotesEditorPanel from './components/NoteEditorPanel'
+import { useAppSelector } from './app/hooks'
+import { selectSelectedNote } from './slices/notesSlice'
+import { Note } from './types/data-models'
+import { ToastContainer } from 'react-toastify'
 
 export default function App(): ReactElement {
+  const selectedNote: Note = useAppSelector(selectSelectedNote)
   return (
     <div className="min-h-screen max-h-screen h-screen flex bg-main text-white">
+      <ToastContainer position="bottom-right" />
+
       {/* Categories Sidebar */}
       <CategoriesPanel />
 
@@ -24,9 +32,13 @@ export default function App(): ReactElement {
 
       {/* Editor Area */}
       <section className="flex-1 bg-main hidden lg:block">
-        <div className="flex items-center justify-center h-full text-text-muted">
-          Pilih catatan untuk melihat detailnya
-        </div>
+        {selectedNote ? (
+          <NotesEditorPanel />
+        ) : (
+          <div className="flex items-center justify-center h-full text-muted">
+            Pilih catatan untuk melihat detailnya
+          </div>
+        )}
       </section>
     </div>
   )
