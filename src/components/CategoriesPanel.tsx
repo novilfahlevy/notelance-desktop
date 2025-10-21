@@ -1,7 +1,18 @@
-import { useAppDispatch } from '@/app/hooks'
+import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import { Category } from '@/types/data-models'
 import { ReactElement, SyntheticEvent, useEffect, useState } from 'react'
-import { setSelectedCategory } from '@/slices/categoriesSlice'
+import { 
+  setSelectedCategory,
+  fetchCategories,
+  addCategory as addCategoryAction,
+  updateCategory as updateCategoryAction,
+  deleteCategory as deleteCategoryAction,
+  reorderCategories as reorderCategoriesAction,
+  selectCategories,
+  updateCategoriesOrder
+} from '@/slices/categoriesSlice'
+import { showConfirmDialog } from '@/utils/confirmDialog'
+import { toast } from 'react-toastify'
 
 import {
   Tag,
@@ -20,6 +31,7 @@ import {
 
 export default function CategoriesPanel(): ReactElement {
   const dispatch = useAppDispatch()
+  const categories = useAppSelector(selectCategories)
 
   const [isCategoriesPanelOpen, openCategoriesPanel] = useState<boolean>(true)
   const toggleCategoriesPanel = () => openCategoriesPanel(!isCategoriesPanelOpen)
@@ -31,7 +43,6 @@ export default function CategoriesPanel(): ReactElement {
     setEditingCategoryName('')
   }
 
-  const [categories, setCategories] = useState<Category[]>([])
   const [draggedCategory, setDraggedCategory] = useState<Category | null>(null)
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -63,13 +74,8 @@ export default function CategoriesPanel(): ReactElement {
   }, [])
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      const fetchedCategories: Category[] = await window.localDatabase.fetchCategories()
-      setCategories(fetchedCategories)
-    }
-
-    fetchCategories()
-  }, [])
+    dispatch(fetchCategories())
+  }, [dispatch])
 
   const handleSelectCategory = (category: Category | null) => {
     dispatch(setSelectedCategory(category))
@@ -84,9 +90,14 @@ export default function CategoriesPanel(): ReactElement {
     event.preventDefault()
     if (!newCategoryName.trim()) return
     
-    const newCategory: Category = await window.localDatabase.addCategory(newCategoryName.trim())
-    setCategories([...categories, newCategory])
-    setNewCategoryName('')
+    try {
+      await dispatch(addCategoryAction(newCategoryName.trim())).unwrap()
+      setNewCategoryName('')
+      toast.success('Kategori berhasil ditambahkan')
+    } catch (error) {
+      console.error('Failed to add category:', error)
+      toast.error('Gagal menambahkan kategori')
+    }
   }
 
   // Edit category
@@ -103,16 +114,37 @@ export default function CategoriesPanel(): ReactElement {
   const handleSaveEdit = async (categoryId: number) => {
     if (!editingCategoryName.trim()) return
     
-    const updatedCategory = await window.localDatabase.updateCategory(categoryId, editingCategoryName.trim())
-    setCategories(categories.map(cat => cat.id === categoryId ? updatedCategory : cat))
-    setEditingCategoryId(null)
-    setEditingCategoryName('')
+    try {
+      await dispatch(updateCategoryAction({ 
+        categoryId, 
+        categoryName: editingCategoryName.trim() 
+      })).unwrap()
+      setEditingCategoryId(null)
+      setEditingCategoryName('')
+      toast.success('Kategori berhasil diperbarui')
+    } catch (error) {
+      console.error('Failed to update category:', error)
+      toast.error('Gagal memperbarui kategori')
+    }
   }
 
   // Delete category
   const handleDeleteCategory = async (categoryId: number) => {
-    await window.localDatabase.deleteCategory(categoryId)
-    setCategories(categories.filter(cat => cat.id !== categoryId))
+    showConfirmDialog({
+      title: 'Hapus Kategori',
+      message: 'Apakah Anda yakin ingin menghapus kategori ini? Catatan di dalamnya tidak akan terhapus.',
+      confirmLabel: 'Hapus',
+      cancelLabel: 'Batal',
+      onConfirm: async () => {
+        try {
+          await dispatch(deleteCategoryAction(categoryId)).unwrap()
+          toast.success('Kategori berhasil dihapus')
+        } catch (error) {
+          console.error('Failed to delete category:', error)
+          toast.error('Gagal menghapus kategori')
+        }
+      }
+    })
   }
 
   // Drag and drop handlers
@@ -134,14 +166,18 @@ export default function CategoriesPanel(): ReactElement {
     newCategories.splice(draggedIndex, 1)
     newCategories.splice(targetIndex, 0, draggedCategory)
 
-    setCategories(newCategories)
+    dispatch(updateCategoriesOrder(newCategories))
   }
 
   const handleDragEnd = async () => {
     if (draggedCategory) {
-      // Save the new order to database
-      await window.localDatabase.reorderCategories(categories)
-      setDraggedCategory(null)
+      try {
+        await dispatch(reorderCategoriesAction(categories)).unwrap()
+        setDraggedCategory(null)
+      } catch (error) {
+        console.error('Failed to reorder categories:', error)
+        toast.error('Gagal menyimpan urutan kategori')
+      }
     }
   }
 

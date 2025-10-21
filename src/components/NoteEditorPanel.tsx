@@ -1,4 +1,5 @@
 import { useEditor, EditorContent, Editor } from '@tiptap/react'
+// eslint-disable-next-line import/no-named-as-default
 import StarterKit from '@tiptap/starter-kit'
 import TiptapUnderline from '@tiptap/extension-underline'
 import TiptapLink from '@tiptap/extension-link'
@@ -21,20 +22,10 @@ import { selectSelectedNote, updateNote as updateNoteAction, deleteNote as delet
 import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import { showConfirmDialog } from '@/utils/confirmDialog'
+import { selectCategories } from '@/slices/categoriesSlice'
+import CategoriesSelector from '@/components/CategoriesSelector'
 
-const MenuBar = ({ 
-  editor, 
-  onDelete, 
-  onSave, 
-  isSaving,
-  isDeleting
-}: { 
-  editor: Editor | null
-  onDelete: () => void
-  onSave: () => void
-  isSaving: boolean
-  isDeleting: boolean
-}) => {
+const MenuBar = ({ editor }: { editor: Editor | null }) => {
   if (!editor) {
     return null
   }
@@ -145,28 +136,6 @@ const MenuBar = ({
           <Link2 size={18} />
         </button>
       </div>
-
-      <div className="flex gap-2 ml-auto">
-        <button
-          onClick={onDelete}
-          disabled={isDeleting}
-          className="px-3 py-2 rounded hover:bg-red-600/20 text-red-400 hover:text-red-300 transition-colors cursor-pointer flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Hapus Catatan"
-        >
-          {isDeleting ? <LoaderCircle className="animate-spin" size={18} /> : <Trash2 size={18} />}
-          <span className="text-sm font-medium">Hapus</span>
-        </button>
-
-        <button
-          onClick={onSave}
-          disabled={isSaving}
-          className="px-3 py-2 rounded bg-accent-600 hover:bg-accent-700 text-main transition-colors cursor-pointer flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Simpan Catatan"
-        >
-          {isSaving ? <LoaderCircle className="animate-spin" size={18} /> : <Save size={18} />}
-          <span className="text-sm font-medium">Simpan</span>
-        </button>
-      </div>
     </div>
   )
 }
@@ -177,6 +146,19 @@ export default function NotesEditor() {
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [title, setTitle] = useState('')
+
+  const categories = useAppSelector(selectCategories)
+  const categoriesOptions = categories.map((category) => ({
+    label: category.name,
+    value: category.id.toString()
+  }))
+
+  categoriesOptions.unshift({ label: 'Umum', value: null })
+  
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null)
+  const handleSelectedCategoryId = (value: string) => {
+    setSelectedCategoryId(parseInt(value))
+  }
 
   const editor = useEditor({
     extensions: [
@@ -197,15 +179,14 @@ export default function NotesEditor() {
     },
   })
 
-  // Update editor content and title when selectedNote changes
   useEffect(() => {
     if (editor && selectedNote) {
       editor.commands.setContent(selectedNote.content || '')
       setTitle(selectedNote.title || '')
+      setSelectedCategoryId(selectedNote.category_id || null)
     }
   }, [selectedNote, editor])
 
-  // Add keyboard shortcut for saving (Ctrl+S / Cmd+S)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
@@ -251,7 +232,8 @@ export default function NotesEditor() {
         noteId: selectedNote.id, 
         updates: {
           title: title,
-          content: content
+          content: content,
+          categoryId: selectedCategoryId || null
         }
       })).unwrap()
       toast.success('Catatan berhasil disimpan')
@@ -273,6 +255,37 @@ export default function NotesEditor() {
 
   return (
     <div className="flex flex-col h-screen bg-main text-text-primary">
+      <div className="border-b border-border-default flex gap-2 bg-surface items-center p-3">
+        {/* Dropdown kategori */}
+        <CategoriesSelector
+          options={categoriesOptions}
+          onChange={handleSelectedCategoryId}
+          defaultValue={selectedCategoryId?.toString()}
+        />
+
+        <div className="flex gap-2 ml-auto">
+          <button
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="px-3 py-2 rounded hover:bg-red-600/20 text-red-400 hover:text-red-300 transition-colors cursor-pointer flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Hapus Catatan"
+          >
+            {isDeleting ? <LoaderCircle className="animate-spin" size={18} /> : <Trash2 size={18} />}
+            <span className="text-sm font-medium">Hapus</span>
+          </button>
+
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="px-3 py-2 rounded bg-accent-600 hover:bg-accent-700 text-main transition-colors cursor-pointer flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Simpan Catatan"
+          >
+            {isSaving ? <LoaderCircle className="animate-spin" size={18} /> : <Save size={18} />}
+            <span className="text-sm font-medium">Simpan</span>
+          </button>
+        </div>
+      </div>
+
       <div className="border-b border-border-default bg-main px-6 py-4">
         <input
           type="text"
@@ -283,91 +296,11 @@ export default function NotesEditor() {
         />
       </div>
       
-      <MenuBar 
-        editor={editor} 
-        onDelete={handleDelete} 
-        onSave={handleSave}
-        isSaving={isSaving}
-        isDeleting={isDeleting}
-      />
-      
       <div className="flex-1 overflow-y-auto">
         <EditorContent editor={editor} />
       </div>
-      
-      <style>{`
-        .ProseMirror {
-          min-height: 100%;
-        }
-        
-        .ProseMirror h1 {
-          font-size: 2em;
-          font-weight: bold;
-          margin-top: 0.67em;
-          margin-bottom: 0.67em;
-          color: #e0e0e0;
-        }
-        
-        .ProseMirror h2 {
-          font-size: 1.5em;
-          font-weight: bold;
-          margin-top: 0.83em;
-          margin-bottom: 0.83em;
-          color: #e0e0e0;
-        }
-        
-        .ProseMirror h3 {
-          font-size: 1.17em;
-          font-weight: bold;
-          margin-top: 1em;
-          margin-bottom: 1em;
-          color: #e0e0e0;
-        }
-        
-        .ProseMirror p {
-          margin-top: 1em;
-          margin-bottom: 1em;
-          line-height: 1.6;
-        }
-        
-        .ProseMirror ul {
-          list-style-type: disc;
-          padding-left: 2em;
-          margin-top: 1em;
-          margin-bottom: 1em;
-        }
-        
-        .ProseMirror ol {
-          list-style-type: decimal;
-          padding-left: 2em;
-          margin-top: 1em;
-          margin-bottom: 1em;
-        }
-        
-        .ProseMirror li {
-          margin-top: 0.5em;
-          margin-bottom: 0.5em;
-          line-height: 1.6;
-        }
-        
-        .ProseMirror li p {
-          margin: 0;
-        }
-        
-        .ProseMirror a {
-          color: #ffc107;
-          text-decoration: underline;
-          cursor: pointer;
-        }
-        
-        .ProseMirror a:hover {
-          color: #ffca28;
-        }
-        
-        .ProseMirror:focus {
-          outline: none;
-        }
-      `}</style>
+
+      <MenuBar editor={editor} />
     </div>
   )
 }
