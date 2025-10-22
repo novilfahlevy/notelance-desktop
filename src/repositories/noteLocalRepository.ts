@@ -63,6 +63,12 @@ export class NoteLocalRepository {
     )
   }
 
+  async getWithoutCategory(): Promise<Note[]> {
+    return await this._all<Note>(
+      'SELECT * FROM notes WHERE category_id IS NULL AND is_deleted != 1 ORDER BY updated_at DESC'
+    )
+  }
+
   async search(query: string): Promise<Note[]> {
     const searchTerm = `%${query}%`
     return await this._all<Note>(

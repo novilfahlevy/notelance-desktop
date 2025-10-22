@@ -9,6 +9,12 @@ contextBridge.exposeInMainWorld('localDatabase', {
   async fetchCategories(): Promise<Category[]> {
     return await ipcRenderer.invoke('fetch-categories')
   },
+  async fetchGeneralNotesCount(): Promise<number> {
+    return await ipcRenderer.invoke('fetch-general-notes-count')
+  },
+  async fetchCategoryNotesCount(categoryId: number): Promise<number> {
+    return await ipcRenderer.invoke('fetch-category-notes-count', categoryId)
+  },
   async addCategory(categoryName: string): Promise<Category> {
     return await ipcRenderer.invoke('add-category', categoryName)
   },
@@ -28,6 +34,9 @@ contextBridge.exposeInMainWorld('localDatabase', {
   },
   async fetchNotesByCategory(categoryId: number | null): Promise<Note[]> {
     return await ipcRenderer.invoke('fetch-notes-by-category', categoryId)
+  },
+  async fetchNotesWithoutCategory(): Promise<Note[]> {
+    return await ipcRenderer.invoke('fetch-notes-without-category')
   },
   async searchNotes(query: string): Promise<Note[]> {
     return await ipcRenderer.invoke('search-notes', query)

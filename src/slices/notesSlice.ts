@@ -26,9 +26,8 @@ export const fetchNotes = createAsyncThunk(
   async (categoryId: number | null | undefined) => {
     if (categoryId !== null && categoryId !== undefined) {
       return await window.localDatabase.fetchNotesByCategory(categoryId)
-    } else {
-      return await window.localDatabase.fetchNotes()
     }
+    return await window.localDatabase.fetchNotesWithoutCategory()
   }
 )
 

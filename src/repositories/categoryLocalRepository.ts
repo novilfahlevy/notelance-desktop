@@ -209,6 +209,13 @@ export class CategoryLocalRepository {
     return await this._all<Category>('SELECT * FROM categories WHERE is_deleted IN (0, 1)')
   }
 
+  async getGeneralNotesCount(): Promise<number> {
+    const result = await this._get<{ count: number }>(
+      'SELECT COUNT(*) as count FROM notes WHERE category_id IS NULL AND is_deleted != 1'
+    )
+    return result?.count ?? 0
+  }
+
   async getNotesCount(categoryId: number): Promise<number> {
     const result = await this._get<{ count: number }>(
       'SELECT COUNT(*) as count FROM notes WHERE category_id = ? AND is_deleted != 1',

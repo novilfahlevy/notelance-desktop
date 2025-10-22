@@ -19,6 +19,7 @@ export interface Category {
 
   name: string // varchar
   order_index: number // int4
+  notes_count?: number //int4
 
   created_at?: Date | string // timestamptz
   updated_at?: Date | string // timestamptz

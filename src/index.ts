@@ -64,7 +64,28 @@ app.whenReady().then(() => {
   // Fetch all categories
   ipcMain.handle('fetch-categories', async () => {
     const categoryLocalRepo = new CategoryLocalRepository()
-    return await categoryLocalRepo.get()
+    const noteLocalRepo = new NoteLocalRepository()
+    
+    const categories = await categoryLocalRepo.get()
+    
+    // Add notes_count to each category
+    const categoriesWithCount = await Promise.all(
+      categories.map(async (category) => {
+        const notesCount = await noteLocalRepo.countByCategory(category.id)
+        return {
+          ...category,
+          notes_count: notesCount
+        }
+      })
+    )
+    
+    return categoriesWithCount
+  })
+
+  // Fetch all categories
+  ipcMain.handle('fetch-category-notes-count', async (_, categoryId: number) => {
+    const categoryLocalRepo = new CategoryLocalRepository()
+    return await categoryLocalRepo.getNotesCount(categoryId)
   })
 
   // Add new category
@@ -93,6 +114,12 @@ app.whenReady().then(() => {
     await categoryLocalRepo.renewOrders(categories)
   })
 
+  // Reorder categories
+  ipcMain.handle('fetch-general-notes-count', async () => {
+    const categoryLocalRepo = new CategoryLocalRepository()
+    return await categoryLocalRepo.getGeneralNotesCount()
+  })
+
   // ===== NOTES HANDLERS =====
 
   // Fetch all notes
@@ -105,6 +132,12 @@ app.whenReady().then(() => {
   ipcMain.handle('fetch-notes-by-category', async (_, categoryId: number | null) => {
     const noteLocalRepo = new NoteLocalRepository()
     return await noteLocalRepo.getByCategory(categoryId)
+  })
+
+  // Fetch notes by category
+  ipcMain.handle('fetch-notes-without-category', async () => {
+    const noteLocalRepo = new NoteLocalRepository()
+    return await noteLocalRepo.getWithoutCategory()
   })
 
   // Search notes

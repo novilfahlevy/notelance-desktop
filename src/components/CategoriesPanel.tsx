@@ -32,6 +32,7 @@ import {
 export default function CategoriesPanel(): ReactElement {
   const dispatch = useAppDispatch()
   const categories = useAppSelector(selectCategories)
+  const [generalNotesCount, setGeneralNotesCount] = useState<number>(0)
 
   const [isCategoriesPanelOpen, openCategoriesPanel] = useState<boolean>(true)
   const toggleCategoriesPanel = () => openCategoriesPanel(!isCategoriesPanelOpen)
@@ -76,6 +77,16 @@ export default function CategoriesPanel(): ReactElement {
   useEffect(() => {
     dispatch(fetchCategories())
   }, [dispatch])
+
+  useEffect(() => {
+    const getGeneralNotesCount = async () => {
+      const counts = await window.localDatabase.fetchGeneralNotesCount()
+      console.log(counts)
+      setGeneralNotesCount(counts)
+    }
+
+    getGeneralNotesCount()
+  }, [])
 
   const handleSelectCategory = (category: Category | null) => {
     dispatch(setSelectedCategory(category))
@@ -219,10 +230,10 @@ export default function CategoriesPanel(): ReactElement {
           >
             <div className="flex items-center gap-x-3">
               <Notebook className="text-accent-500" size={20} />
-              {isCategoriesPanelOpen && <p className="text-base">Semua</p>}
+              {isCategoriesPanelOpen && <p className="text-base">Umum</p>}
             </div>
             {isCategoriesPanelOpen && (
-              <span className="text-accent-300 text-sm">25</span>
+              <span className="text-accent-300 text-sm">{generalNotesCount}</span>
             )}
           </li>
 
@@ -314,7 +325,7 @@ export default function CategoriesPanel(): ReactElement {
                       </div>
                     ) : (
                       isCategoriesPanelOpen && (
-                        <span className="text-accent-300 text-sm">0</span>
+                        <span className="text-accent-300 text-sm">{category.notes_count}</span>
                       )
                     )}
                   </>
