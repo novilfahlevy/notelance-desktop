@@ -81,7 +81,6 @@ export default function CategoriesPanel(): ReactElement {
   useEffect(() => {
     const getGeneralNotesCount = async () => {
       const counts = await window.localDatabase.fetchGeneralNotesCount()
-      console.log(counts)
       setGeneralNotesCount(counts)
     }
 

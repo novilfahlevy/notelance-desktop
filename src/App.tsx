@@ -1,4 +1,4 @@
-import { type ReactElement } from 'react'
+import { useEffect, type ReactElement } from 'react'
 
 import '@fontsource/inter/400.css'
 import '@fontsource/inter/500.css'
@@ -18,6 +18,17 @@ import { ToastContainer } from 'react-toastify'
 
 export default function App(): ReactElement {
   const selectedNote: Note = useAppSelector(selectSelectedNote)
+
+  useEffect(() => {
+    const handleSynchronization = async () => {
+      return await window.localDatabase.syncWithRemote()
+    }
+    
+    handleSynchronization()
+      .then(result => console.log(result))
+      .catch(error => console.log(error))
+  }, [])
+
   return (
     <div className="min-h-screen max-h-screen h-screen flex bg-main text-white">
       <ToastContainer position="bottom-right" hideProgressBar />

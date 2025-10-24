@@ -5,6 +5,10 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { Category, Note } from './types/data-models'
 
 contextBridge.exposeInMainWorld('localDatabase', {
+  async syncWithRemote(): Promise<{ [key: string]: unknown }> {
+    return await ipcRenderer.invoke('sync-with-remote')
+  },
+
   // ===== CATEGORIES =====
   async fetchCategories(): Promise<Category[]> {
     return await ipcRenderer.invoke('fetch-categories')

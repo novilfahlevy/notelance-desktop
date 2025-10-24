@@ -1,5 +1,6 @@
-import { ReactElement, useEffect } from 'react'
-import { Clock, Search, FileText, Plus } from 'lucide-react'
+import { ReactElement, useEffect, useState } from 'react'
+import { Clock, Search, FileText, Plus, RefreshCw, CheckCircle, XCircle } from 'lucide-react'
+import { toast } from 'react-toastify'
 import { Note } from '@/types/data-models'
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import { 
@@ -14,6 +15,7 @@ import {
   selectIsLoading,
   clearSearch
 } from '@/slices/notesSlice'
+import { SyncResult } from '@/synchronization'
 
 export function NotesPanel(): ReactElement {
   const dispatch = useAppDispatch()
@@ -22,6 +24,8 @@ export function NotesPanel(): ReactElement {
   const isSearching = useAppSelector(selectIsSearching)
   const isLoading = useAppSelector(selectIsLoading)
   const selectedCategory = useAppSelector((state) => state.categories.selectedCategory)
+
+  const [isSyncing, setIsSyncing] = useState(false)
 
   const handleSelectNote = (note: Note) => {
     dispatch(setSelectedNote(note))
@@ -33,6 +37,55 @@ export function NotesPanel(): ReactElement {
       content: '',
       categoryId: selectedCategory?.id ?? null,
     }))
+  }
+
+  const handleSync = async () => {
+    setIsSyncing(true)
+    
+    const toastId = toast.loading('Data sedang disinkronisasi...', {
+      position: 'top-left',
+      closeButton: false,
+    })
+
+    try {
+      const result: SyncResult = await window.localDatabase.syncWithRemote()
+
+      if (result.status === 'success') {
+        toast.update(toastId, {
+          render: 'Sinkronisasi berhasil!',
+          position: 'top-left',
+          type: 'success',
+          isLoading: false,
+          autoClose: 3000,
+          closeButton: true,
+          icon: <CheckCircle size={20} />,
+        })
+        
+        // Refresh data after successful sync
+        dispatch(fetchNotes(selectedCategory?.id))
+      } else {
+        toast.update(toastId, {
+          render: result.error || 'Sinkronisasi gagal',
+          position: 'top-left',
+          type: 'error',
+          isLoading: false,
+          autoClose: 5000,
+          closeButton: true,
+          icon: <XCircle size={20} />,
+        })
+      }
+    } catch (error) {
+      toast.update(toastId, {
+        render: error instanceof Error ? error.message : 'Terjadi kesalahan',
+        type: 'error',
+        isLoading: false,
+        autoClose: 5000,
+        closeButton: true,
+        icon: <XCircle size={20} />,
+      })
+    } finally {
+      setIsSyncing(false)
+    }
   }
 
   useEffect(() => {
@@ -71,7 +124,7 @@ export function NotesPanel(): ReactElement {
 
   return (
     <div className="w-full pb-40">
-      {/* Header with Search and Create Button */}
+      {/* Header with Search and Buttons */}
       <div className="flex items-center gap-x-3 sticky top-0 bg-surface p-6">
         {/* Search Input */}
         <div className="relative flex-1">
@@ -87,6 +140,17 @@ export function NotesPanel(): ReactElement {
             className="bg-main border border-border-default rounded-md w-full text-white placeholder-text-muted outline-none pl-10 pr-4 py-2 focus:border-accent-500 transition-colors"
           />
         </div>
+
+        {/* Sync Button */}
+        <button
+          onClick={handleSync}
+          disabled={isSyncing || isLoading}
+          className="flex items-center gap-x-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition-colors whitespace-nowrap font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          title="Sinkronkan dengan server"
+        >
+          <RefreshCw size={18} className={isSyncing ? 'animate-spin' : ''} />
+          Sinkron
+        </button>
 
         {/* Create Note Button */}
         <button

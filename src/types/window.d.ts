@@ -1,6 +1,9 @@
+import { SyncResult } from '@/synchronization'
 import { Note, Category } from './data-models'
 
 export interface LocalDatabase {
+  syncWithRemote: () => Promise<SyncResult>
+
   // Categories
   fetchCategories: () => Promise<Category[]>
   fetchGeneralNotesCount: () => Promise<number>
