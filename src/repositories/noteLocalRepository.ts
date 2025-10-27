@@ -85,11 +85,15 @@ export class NoteLocalRepository {
     content,
     categoryId,
     remoteId,
+    createdAt,
+    updatedAt,
   }: {
     title: string
     content: string
     categoryId?: number | null
     remoteId?: number
+    createdAt?: string
+    updatedAt?: string
   }): Promise<Note> {
     const now = new Date().toISOString()
 
@@ -101,7 +105,7 @@ export class NoteLocalRepository {
     return new Promise((resolve, reject) => {
       this.db.run(
         sql,
-        [title, content, categoryId ?? null, remoteId ?? null, now, now],
+        [title, content, categoryId ?? null, remoteId ?? null, (createdAt || now), (updatedAt || now)],
         function (err) {
           if (err) return reject(err)
           resolve({
@@ -127,7 +131,6 @@ export class NoteLocalRepository {
       categoryId,
       remoteId,
       isDeleted,
-      createdAt,
       updatedAt,
     }: {
       title?: string
@@ -135,7 +138,6 @@ export class NoteLocalRepository {
       categoryId?: number | null
       remoteId?: number
       isDeleted?: number
-      createdAt?: string
       updatedAt?: string
     }
   ): Promise<Note> {
@@ -162,18 +164,11 @@ export class NoteLocalRepository {
       updates.push('is_deleted = ?')
       params.push(isDeleted)
     }
-    if (createdAt !== undefined) {
-      updates.push('created_at = ?')
-      params.push(createdAt)
-    }
+    
+    updates.push('updated_at = ?')
     if (updatedAt !== undefined) {
-      updates.push('updated_at = ?')
       params.push(updatedAt)
-    }
-
-    // Always update the updated_at field
-    if (updatedAt === undefined) {
-      updates.push('updated_at = ?')
+    } else {
       params.push(new Date().toISOString())
     }
 

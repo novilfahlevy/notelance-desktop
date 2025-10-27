@@ -288,6 +288,8 @@ export class Synchronization {
               name: remoteCategoryData['name'],
               orderIndex: remoteCategoryData['order_index'],
               remoteId: remoteId,
+              createdAt: remoteCategoryData['created_at'],
+              updatedAt: remoteCategoryData['updated_at']
             })
             console.log(`Created new local category from remote: ${remoteCategoryData['name']}`)
           }
@@ -509,6 +511,8 @@ export class Synchronization {
               content: remoteNoteData.content,
               categoryId: categoryId,
               remoteId: currentRemoteNoteId,
+              createdAt: createdAtUtc.toISOString(),
+              updatedAt: updatedAtUtc.toISOString()
             })
             console.log(`Created new local note from remote: ${remoteNoteData.title}`)
           }

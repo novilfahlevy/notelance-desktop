@@ -64,12 +64,16 @@ export class CategoryLocalRepository {
     name,
     orderIndex,
     remoteId,
+    createdAt,
+    updatedAt,
   }: {
     name: string
     orderIndex?: number
     remoteId?: number
+    createdAt?: string
+    updatedAt?: string
   }): Promise<Category> {
-    const now = new Date().toUTCString()
+    const now = new Date().toISOString()
     const order = orderIndex ?? (await this._getNextOrder())
 
     const sql = `
@@ -78,7 +82,7 @@ export class CategoryLocalRepository {
     `
 
     return new Promise((resolve, reject) => {
-      this.db.run(sql, [name, order, remoteId, now, now], function (err) {
+      this.db.run(sql, [name, order, remoteId, (createdAt || now), (updatedAt || now)], function (err) {
         if (err) return reject(err)
         resolve({
           id: this.lastID,
@@ -107,7 +111,6 @@ export class CategoryLocalRepository {
       orderIndex,
       remoteId,
       isDeleted,
-      createdAt,
       updatedAt,
     }: {
       name?: string
@@ -120,6 +123,8 @@ export class CategoryLocalRepository {
   ): Promise<Category> {
     const updates: string[] = []
     const params: unknown[] = []
+
+    const now: string = new Date().toISOString()
 
     if (name !== undefined) {
       updates.push('name = ?')
@@ -137,14 +142,9 @@ export class CategoryLocalRepository {
       updates.push('is_deleted = ?')
       params.push(isDeleted)
     }
-    if (createdAt !== undefined) {
-      updates.push('created_at = ?')
-      params.push(createdAt)
-    }
-    if (updatedAt !== undefined) {
-      updates.push('updated_at = ?')
-      params.push(updatedAt)
-    }
+
+    updates.push('updated_at = ?')
+    params.push(updatedAt !== undefined ? updatedAt : now)
 
     if (updates.length === 0) throw new Error('No fields to update.')
 
@@ -158,7 +158,7 @@ export class CategoryLocalRepository {
   }
 
   async renewOrders(categories: Category[]): Promise<void> {
-    const now = new Date().toUTCString()
+    const now = new Date().toISOString()
 
     await new Promise<void>((resolve, reject) => {
       this.db.serialize(() => {
@@ -180,7 +180,7 @@ export class CategoryLocalRepository {
   }
 
   async delete(categoryId: number): Promise<void> {
-    const now = new Date().toUTCString()
+    const now = new Date().toISOString()
 
     // Detach notes
     await this._run(
@@ -196,7 +196,7 @@ export class CategoryLocalRepository {
   }
 
   async hardDelete(id: number): Promise<void> {
-    const now = new Date().toUTCString()
+    const now = new Date().toISOString()
 
     await this._run(
       'UPDATE notes SET category_id = NULL, updated_at = ? WHERE category_id = ?',
