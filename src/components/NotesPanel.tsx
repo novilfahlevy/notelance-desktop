@@ -41,18 +41,12 @@ export function NotesPanel(): ReactElement {
 
   const handleSync = async () => {
     setIsSyncing(true)
-    
-    const toastId = toast.loading('Data sedang disinkronisasi...', {
-      position: 'top-left',
-      closeButton: false,
-    })
 
     try {
       const result: SyncResult = await window.localDatabase.syncWithRemote()
 
       if (result.status === 'success') {
-        toast.update(toastId, {
-          render: 'Sinkronisasi berhasil!',
+        toast.success('Sinkronisasi berhasil!', {
           position: 'top-left',
           type: 'success',
           isLoading: false,
@@ -64,8 +58,7 @@ export function NotesPanel(): ReactElement {
         // Refresh data after successful sync
         dispatch(fetchNotes(selectedCategory?.id))
       } else {
-        toast.update(toastId, {
-          render: result.error || 'Sinkronisasi gagal',
+        toast.success(result.error || 'Sinkronisasi gagal', {
           position: 'top-left',
           type: 'error',
           isLoading: false,
@@ -75,8 +68,7 @@ export function NotesPanel(): ReactElement {
         })
       }
     } catch (error) {
-      toast.update(toastId, {
-        render: error instanceof Error ? error.message : 'Terjadi kesalahan',
+      toast.success(error instanceof Error ? error.message : 'Terjadi kesalahan', {
         type: 'error',
         isLoading: false,
         autoClose: 5000,
