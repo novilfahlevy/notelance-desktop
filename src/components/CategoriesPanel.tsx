@@ -9,7 +9,9 @@ import {
   deleteCategory as deleteCategoryAction,
   reorderCategories as reorderCategoriesAction,
   selectCategories,
-  updateCategoriesOrder
+  updateCategoriesOrder,
+  selectGeneralNotesCount,
+  fetchGeneralNotesCount
 } from '@/slices/categoriesSlice'
 import { showConfirmDialog } from '@/utils/confirmDialog'
 import { toast } from 'react-toastify'
@@ -32,7 +34,7 @@ import {
 export default function CategoriesPanel(): ReactElement {
   const dispatch = useAppDispatch()
   const categories = useAppSelector(selectCategories)
-  const [generalNotesCount, setGeneralNotesCount] = useState<number>(0)
+  const generalNotesCount = useAppSelector(selectGeneralNotesCount)
 
   const [isCategoriesPanelOpen, openCategoriesPanel] = useState<boolean>(true)
   const toggleCategoriesPanel = () => openCategoriesPanel(!isCategoriesPanelOpen)
@@ -76,16 +78,8 @@ export default function CategoriesPanel(): ReactElement {
 
   useEffect(() => {
     dispatch(fetchCategories())
+    dispatch(fetchGeneralNotesCount())
   }, [dispatch])
-
-  useEffect(() => {
-    const getGeneralNotesCount = async () => {
-      const counts = await window.localDatabase.fetchGeneralNotesCount()
-      setGeneralNotesCount(counts)
-    }
-
-    getGeneralNotesCount()
-  }, [])
 
   const handleSelectCategory = (category: Category | null) => {
     dispatch(setSelectedCategory(category))

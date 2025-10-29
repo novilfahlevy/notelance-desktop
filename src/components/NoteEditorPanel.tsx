@@ -22,7 +22,7 @@ import { selectSelectedNote, updateNote as updateNoteAction, deleteNote as delet
 import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import { showConfirmDialog } from '@/utils/confirmDialog'
-import { selectCategories } from '@/slices/categoriesSlice'
+import { decreaseGeneralNoteCount, decreaseCategoryNoteCount, selectCategories } from '@/slices/categoriesSlice'
 import CategoriesSelector from '@/components/CategoriesSelector'
 
 const MenuBar = ({ editor }: { editor: Editor | null }) => {
@@ -211,6 +211,11 @@ export default function NotesEditor() {
         setIsDeleting(true)
         try {
           await dispatch(deleteNoteAction(selectedNote.id)).unwrap()
+          if (selectedCategoryId) {
+            dispatch(decreaseCategoryNoteCount(selectedCategoryId))
+          } else {
+            dispatch(decreaseGeneralNoteCount())
+          }
           toast.success('Catatan berhasil dihapus')
         } catch (error) {
           console.error('Gagal menghapus catatan:', error)

@@ -5,6 +5,7 @@ import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit'
 interface CategoriesState {
   selectedCategory: Category | null
   categories: Category[]
+  generalNotesCount: number
   isLoading: boolean
   error: string | null
 }
@@ -12,6 +13,7 @@ interface CategoriesState {
 const initialState: CategoriesState = {
   selectedCategory: null,
   categories: [],
+  generalNotesCount: 0,
   isLoading: false,
   error: null,
 }
@@ -21,6 +23,13 @@ export const fetchCategories = createAsyncThunk(
   'categories/fetchCategories',
   async () => {
     return await window.localDatabase.fetchCategories()
+  }
+)
+
+export const fetchGeneralNotesCount = createAsyncThunk(
+  'categories/fetchGeneralNotesCount',
+  async () => {
+    return await window.localDatabase.fetchGeneralNotesCount()
   }
 )
 
@@ -64,6 +73,20 @@ export const categoriesSlice = createSlice({
     updateCategoriesOrder: (state: CategoriesState, action: PayloadAction<Category[]>) => {
       state.categories = action.payload
     },
+    increaseGeneralNoteCount: (state: CategoriesState) => {
+      state.generalNotesCount++
+    },
+    decreaseGeneralNoteCount: (state: CategoriesState) => {
+      state.generalNotesCount--
+    },
+    increaseCategoryNoteCount: (state: CategoriesState, action: PayloadAction<number>) => {
+      const categoryIndex = state.categories.findIndex((category: Category) => category.id == action.payload)
+      state.categories[categoryIndex].notes_count++
+    },
+    decreaseCategoryNoteCount: (state: CategoriesState, action: PayloadAction<number>) => {
+      const categoryIndex = state.categories.findIndex((category: Category) => category.id == action.payload)
+      state.categories[categoryIndex].notes_count--
+    },
     clearError: (state: CategoriesState) => {
       state.error = null
     },
@@ -81,6 +104,11 @@ export const categoriesSlice = createSlice({
     builder.addCase(fetchCategories.rejected, (state, action) => {
       state.isLoading = false
       state.error = action.error.message || 'Failed to fetch categories'
+    })
+
+    // Fetch general notes count
+    builder.addCase(fetchGeneralNotesCount.fulfilled, (state, action) => {
+      state.generalNotesCount = action.payload
     })
 
     // Add category
@@ -150,9 +178,18 @@ export const categoriesSlice = createSlice({
 // Selectors
 export const selectSelectedCategory = (state: RootState) => state.categories.selectedCategory
 export const selectCategories = (state: RootState) => state.categories.categories
+export const selectGeneralNotesCount = (state: RootState) => state.categories.generalNotesCount
 export const selectIsLoading = (state: RootState) => state.categories.isLoading
 export const selectError = (state: RootState) => state.categories.error
 
-export const { setSelectedCategory, updateCategoriesOrder, clearError } = categoriesSlice.actions
+export const {
+  setSelectedCategory,
+  increaseGeneralNoteCount,
+  decreaseGeneralNoteCount,
+  increaseCategoryNoteCount,
+  decreaseCategoryNoteCount,
+  updateCategoriesOrder,
+  clearError
+} = categoriesSlice.actions
 
 export default categoriesSlice.reducer

@@ -16,6 +16,7 @@ import {
   clearSearch
 } from '@/slices/notesSlice'
 import { SyncResult } from '@/synchronization'
+import { increaseGeneralNoteCount, increaseCategoryNoteCount } from '@/slices/categoriesSlice'
 
 export function NotesPanel(): ReactElement {
   const dispatch = useAppDispatch()
@@ -37,6 +38,11 @@ export function NotesPanel(): ReactElement {
       content: '',
       categoryId: selectedCategory?.id ?? null,
     }))
+    if (selectedCategory) {
+      dispatch(increaseCategoryNoteCount(selectedCategory.id))
+    } else {
+      dispatch(increaseGeneralNoteCount())
+    }
   }
 
   const handleSync = async () => {
