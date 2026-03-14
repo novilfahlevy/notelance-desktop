@@ -1,5 +1,4 @@
 import { useEditor, EditorContent, Editor } from '@tiptap/react'
-// eslint-disable-next-line import/no-named-as-default
 import StarterKit from '@tiptap/starter-kit'
 import TiptapUnderline from '@tiptap/extension-underline'
 import TiptapLink from '@tiptap/extension-link'
@@ -24,6 +23,7 @@ import { toast } from 'react-toastify'
 import { showConfirmDialog } from '@/utils/confirmDialog'
 import { decreaseGeneralNoteCount, decreaseCategoryNoteCount, selectCategories } from '@/slices/categoriesSlice'
 import CategoriesSelector from '@/components/CategoriesSelector'
+import { debouncedAutoSync } from '@/utils/autoSync'
 
 const MenuBar = ({ editor }: { editor: Editor | null }) => {
   if (!editor) {
@@ -217,6 +217,9 @@ export default function NotesEditor() {
             dispatch(decreaseGeneralNoteCount())
           }
           toast.success('Catatan berhasil dihapus')
+          
+          // Auto-sync after deleting note
+          debouncedAutoSync(500)
         } catch (error) {
           console.error('Gagal menghapus catatan:', error)
           toast.error('Gagal menghapus catatan')
@@ -242,6 +245,9 @@ export default function NotesEditor() {
         }
       })).unwrap()
       toast.success('Catatan berhasil disimpan')
+      
+      // Auto-sync after saving note
+      debouncedAutoSync(500)
     } catch (error) {
       console.error('Gagal menyimpan catatan:', error)
       toast.error('Gagal menyimpan catatan')

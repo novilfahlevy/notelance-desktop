@@ -17,6 +17,7 @@ import {
 } from '@/slices/notesSlice'
 import { SyncResult } from '@/synchronization'
 import { increaseGeneralNoteCount, increaseCategoryNoteCount } from '@/slices/categoriesSlice'
+import { debouncedAutoSync } from '@/utils/autoSync'
 
 export function NotesPanel(): ReactElement {
   const dispatch = useAppDispatch()
@@ -33,16 +34,20 @@ export function NotesPanel(): ReactElement {
   }
 
   const handleCreateNote = async () => {
-    dispatch(createNoteAction({
+    await dispatch(createNoteAction({
       title: 'Untitled Note',
       content: '',
       categoryId: selectedCategory?.id ?? null,
     }))
+    
     if (selectedCategory) {
       dispatch(increaseCategoryNoteCount(selectedCategory.id))
     } else {
       dispatch(increaseGeneralNoteCount())
     }
+
+    // Auto-sync after creating note
+    debouncedAutoSync(500)
   }
 
   const handleSync = async () => {
@@ -54,8 +59,6 @@ export function NotesPanel(): ReactElement {
       if (result.status === 'success') {
         toast.success('Sinkronisasi berhasil!', {
           position: 'top-left',
-          type: 'success',
-          isLoading: false,
           autoClose: 3000,
           closeButton: true,
           icon: <CheckCircle size={20} />,
@@ -64,19 +67,16 @@ export function NotesPanel(): ReactElement {
         // Refresh data after successful sync
         dispatch(fetchNotes(selectedCategory?.id))
       } else {
-        toast.success(result.error || 'Sinkronisasi gagal', {
+        toast.error(result.error || 'Sinkronisasi gagal', {
           position: 'top-left',
-          type: 'error',
-          isLoading: false,
           autoClose: 5000,
           closeButton: true,
           icon: <XCircle size={20} />,
         })
       }
     } catch (error) {
-      toast.success(error instanceof Error ? error.message : 'Terjadi kesalahan', {
-        type: 'error',
-        isLoading: false,
+      toast.error(error instanceof Error ? error.message : 'Terjadi kesalahan', {
+        position: 'top-left',
         autoClose: 5000,
         closeButton: true,
         icon: <XCircle size={20} />,

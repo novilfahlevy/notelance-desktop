@@ -15,6 +15,7 @@ import {
 } from '@/slices/categoriesSlice'
 import { showConfirmDialog } from '@/utils/confirmDialog'
 import { toast } from 'react-toastify'
+import { debouncedAutoSync } from '@/utils/autoSync'
 
 import {
   Tag,
@@ -48,7 +49,6 @@ export default function CategoriesPanel(): ReactElement {
 
   const [draggedCategory, setDraggedCategory] = useState<Category | null>(null)
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isWindowSmallerThanLg, setIfWindowSmallerThanLg] = useState<boolean>(false)
 
   // Edit state
@@ -98,6 +98,9 @@ export default function CategoriesPanel(): ReactElement {
       await dispatch(addCategoryAction(newCategoryName.trim())).unwrap()
       setNewCategoryName('')
       toast.success('Kategori berhasil ditambahkan')
+      
+      // Auto-sync after creating category
+      debouncedAutoSync(500)
     } catch (error) {
       console.error('Failed to add category:', error)
       toast.error('Gagal menambahkan kategori')
@@ -126,6 +129,9 @@ export default function CategoriesPanel(): ReactElement {
       setEditingCategoryId(null)
       setEditingCategoryName('')
       toast.success('Kategori berhasil diperbarui')
+      
+      // Auto-sync after updating category
+      debouncedAutoSync(500)
     } catch (error) {
       console.error('Failed to update category:', error)
       toast.error('Gagal memperbarui kategori')
@@ -143,6 +149,9 @@ export default function CategoriesPanel(): ReactElement {
         try {
           await dispatch(deleteCategoryAction(categoryId)).unwrap()
           toast.success('Kategori berhasil dihapus')
+          
+          // Auto-sync after deleting category
+          debouncedAutoSync(500)
         } catch (error) {
           console.error('Failed to delete category:', error)
           toast.error('Gagal menghapus kategori')
@@ -178,6 +187,9 @@ export default function CategoriesPanel(): ReactElement {
       try {
         await dispatch(reorderCategoriesAction(categories)).unwrap()
         setDraggedCategory(null)
+        
+        // Auto-sync after reordering categories
+        debouncedAutoSync(500)
       } catch (error) {
         console.error('Failed to reorder categories:', error)
         toast.error('Gagal menyimpan urutan kategori')

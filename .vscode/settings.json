@@ -1,3 +1,5 @@
 {
-    "typescript.tsdk": "node_modules\\typescript\\lib"
+    "typescript.tsdk": "node_modules\\typescript\\lib",
+    "editor.fontSize": 11,
+    "editor.fontFamily": "'Source Code Pro', 'Jetbrains Mono', Consolas, 'Courier New', monospace"
 }
