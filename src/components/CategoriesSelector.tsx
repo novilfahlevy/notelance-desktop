@@ -1,13 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { ChevronDown, FolderOpen } from 'lucide-react'
 
 interface Option {
   label: string
-  value: string
+  value: string | null
 }
 
 interface CategoriesSelectorProps {
   options: Option[]
-  onChange?: (value: string) => void
+  onChange?: (value: string | null) => void
   defaultValue?: string
 }
 
@@ -27,7 +28,11 @@ const CategoriesSelector: React.FC<CategoriesSelectorProps> = ({
       if (defaultOption) {
         setSelected(defaultOption)
       }
+      return
     }
+
+    const fallbackOption = options.find((opt) => opt.value === null) ?? null
+    setSelected(fallbackOption)
   }, [defaultValue, options])
 
   const toggleDropdown = () => setIsOpen((prev) => !prev)
@@ -50,49 +55,56 @@ const CategoriesSelector: React.FC<CategoriesSelectorProps> = ({
   }, [])
 
   return (
-    <div className="relative w-64" ref={dropdownRef}>
+    <div className="relative w-[11.5rem] sm:w-64 shrink-0" ref={dropdownRef}>
       {/* Selected Button */}
       <button
         type="button"
         onClick={toggleDropdown}
-        className="w-full flex justify-between items-center px-4 py-2 bg-main border border-gray-300 rounded-lg shadow-sm hover:border-accent-400 cursor-pointer transition-all duration-200"
+        className={`w-full flex items-center justify-between gap-3 rounded-lg border px-4 py-2.5 text-sm transition-all duration-200 cursor-pointer outline-none ${
+          isOpen
+            ? 'border-accent-500 bg-main text-text-primary shadow-card'
+            : 'border-border-default bg-main text-text-secondary hover:border-accent-400 hover:text-text-primary'
+        }`}
       >
-        <span className="transition-colors duration-200">
-          {selected ? selected.label : 'Umum'}
+        <span className="flex items-center gap-2 min-w-0">
+          <FolderOpen size={16} className="text-accent-400 shrink-0" />
+          <span className="truncate font-medium text-inherit">
+            {selected ? selected.label : 'Umum'}
+          </span>
         </span>
-        <svg
-          className={`w-5 h-5 text-gray-500 transform transition-transform duration-300 ${
-            isOpen ? 'rotate-180' : 'rotate-0'
+        <ChevronDown
+          size={18}
+          className={`shrink-0 text-text-muted transition-transform duration-200 ${
+            isOpen ? 'rotate-180 text-accent-400' : 'rotate-0'
           }`}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-        </svg>
+        />
       </button>
 
       {/* Dropdown with animation */}
       <div
-        className={`absolute z-10 w-full mt-2 bg-main border border-accent-200 rounded-lg shadow-lg origin-top transition-all duration-200 ease-out ${
+        className={`absolute left-0 z-20 mt-2 w-full origin-top overflow-hidden rounded-xl border border-border-default bg-surface shadow-card transition-all duration-200 ease-out ${
           isOpen
             ? 'opacity-100 scale-100 translate-y-0'
             : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
         }`}
       >
-        <ul>
+        <ul className="py-2">
           {options.map((option) => (
-            <li
-              key={option.value}
-              onClick={() => handleSelect(option)}
-              className={`px-4 py-2 cursor-pointer transition-all duration-150 hover:bg-accent-200 hover:text-main ${
-                selected?.value === option.value
-                  ? 'bg-accent-200 font-medium text-main'
-                  : (selected === null && option.label == 'Umum' ? 'bg-accent-200 font-medium text-main' : '')
-              }`}
-            >
-              {option.label}
+            <li key={option.value ?? 'general'}>
+              <button
+                type="button"
+                onClick={() => handleSelect(option)}
+                className={`flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-sm transition-colors duration-150 cursor-pointer ${
+                  selected?.value === option.value || (selected === null && option.value === null)
+                    ? 'bg-accent-500/12 text-accent-300'
+                    : 'text-text-secondary hover:bg-main hover:text-text-primary'
+                }`}
+              >
+                <span className="truncate font-medium">{option.label}</span>
+                {(selected?.value === option.value || (selected === null && option.value === null)) && (
+                  <span className="h-2 w-2 shrink-0 rounded-full bg-accent-400" />
+                )}
+              </button>
             </li>
           ))}
         </ul>

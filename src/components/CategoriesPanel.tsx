@@ -37,6 +37,8 @@ export default function CategoriesPanel(): ReactElement {
   const categories = useAppSelector(selectCategories)
   const generalNotesCount = useAppSelector(selectGeneralNotesCount)
 
+  const iconSlotClassName = 'flex h-5 w-5 shrink-0 items-center justify-center'
+
   const [isCategoriesPanelOpen, openCategoriesPanel] = useState<boolean>(true)
   const toggleCategoriesPanel = () => openCategoriesPanel(!isCategoriesPanelOpen)
 
@@ -49,8 +51,6 @@ export default function CategoriesPanel(): ReactElement {
 
   const [draggedCategory, setDraggedCategory] = useState<Category | null>(null)
 
-  const [isWindowSmallerThanLg, setIfWindowSmallerThanLg] = useState<boolean>(false)
-
   // Edit state
   const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null)
   const [editingCategoryName, setEditingCategoryName] = useState<string>('')
@@ -59,15 +59,16 @@ export default function CategoriesPanel(): ReactElement {
     const handleResize = () => {
       const isSmall = window.innerWidth <= 1024
 
-      setIfWindowSmallerThanLg((prevIsSmall) => {
-        if (isSmall && !prevIsSmall) {
-          openCategoriesPanel(false)
-          return true
-        } else if (!isSmall && prevIsSmall) {
-          openCategoriesPanel(true)
+      openCategoriesPanel((prevIsOpen) => {
+        if (isSmall) {
           return false
         }
-        return prevIsSmall
+
+        if (!prevIsOpen) {
+          return true
+        }
+
+        return prevIsOpen
       })
     }
 
@@ -214,7 +215,9 @@ export default function CategoriesPanel(): ReactElement {
           )}
           <button
             onClick={toggleCategoriesPanel}
-            className="text-text-muted hover:text-accent-500 transition-colors cursor-pointer outline-0"
+            className={`flex items-center justify-center rounded-lg text-text-muted hover:bg-main hover:text-accent-500 transition-colors cursor-pointer outline-0 ${
+              isCategoriesPanelOpen ? 'h-10 w-10' : 'h-10 w-full'
+            }`}
           >
             {isCategoriesPanelOpen ? (
               <PanelRightOpen size={22} />
@@ -231,10 +234,16 @@ export default function CategoriesPanel(): ReactElement {
             onClick={() => handleSelectCategory(null)}
             className={`flex items-center ${
               isCategoriesPanelOpen ? 'justify-between' : 'justify-center'
-            } rounded-lg cursor-pointer p-3 hover:bg-accent-800/20 transition-all duration-150 select-none`}
+            } w-full rounded-lg cursor-pointer p-3 hover:bg-accent-800/20 transition-all duration-150 select-none`}
           >
-            <div className="flex items-center gap-x-3">
-              <Notebook className="text-accent-500" size={20} />
+            <div
+              className={`flex items-center gap-x-3 ${
+                isCategoriesPanelOpen ? 'flex-1 min-w-0' : 'justify-center'
+              }`}
+            >
+              <span className={iconSlotClassName}>
+                <Notebook className="text-accent-500" size={18} />
+              </span>
               {isCategoriesPanelOpen && <p className="text-base">Umum</p>}
             </div>
             {isCategoriesPanelOpen && (
@@ -254,13 +263,15 @@ export default function CategoriesPanel(): ReactElement {
                 onClick={() => !isManaging && handleSelectCategory(category)}
                 className={`flex items-center ${
                   isCategoriesPanelOpen ? 'justify-between' : 'justify-center'
-                } rounded-lg cursor-pointer p-3 hover:bg-accent-800/20 transition-all duration-150 select-none group
+                } gap-x-3 w-full rounded-lg cursor-pointer p-3 hover:bg-accent-800/20 transition-all duration-150 select-none group
                 ${draggedCategory?.id === category.id ? 'opacity-50' : ''}`}
               >
                 {editingCategoryId === category.id ? (
                   // Edit mode
-                  <div className="flex items-center gap-x-2 flex-1">
-                    <Tag className="text-accent-400" size={18} />
+                  <div className="flex items-center gap-x-2 flex-1 min-w-0">
+                    <span className={iconSlotClassName}>
+                      <Tag className="text-accent-400 shrink-0" size={18} />
+                    </span>
                     <input
                       type="text"
                       value={editingCategoryName}
@@ -269,19 +280,19 @@ export default function CategoriesPanel(): ReactElement {
                         if (e.key === 'Enter') handleSaveEdit(category.id)
                         if (e.key === 'Escape') handleCancelEdit()
                       }}
-                      className="w-full bg-transparent border-b border-accent-500 outline-none text-base px-1"
+                      className="min-w-0 flex-1 bg-transparent border-b border-accent-500 outline-none text-base px-1"
                       autoFocus
                     />
-                    <div className="flex items-center gap-x-1">
+                    <div className="flex items-center gap-x-1 shrink-0">
                       <button
                         onClick={() => handleSaveEdit(category.id)}
-                        className="text-green-500 hover:text-green-400 p-1"
+                        className="text-green-500 hover:text-green-400 p-1 cursor-pointer"
                       >
                         <Check size={16} />
                       </button>
                       <button
                         onClick={handleCancelEdit}
-                        className="text-red-500 hover:text-red-400 p-1"
+                        className="text-red-500 hover:text-red-400 p-1 cursor-pointer"
                       >
                         <X size={16} />
                       </button>
@@ -289,21 +300,28 @@ export default function CategoriesPanel(): ReactElement {
                   </div>
                 ) : (
                   <>
-                    <div className="flex items-center gap-x-3">
-                      <Tag className="text-accent-400" size={18} />
+                    <div
+                      className={`flex items-center gap-x-3 ${
+                        isCategoriesPanelOpen ? 'flex-1 min-w-0' : 'justify-center'
+                      }`}
+                    >
+                      <span className={iconSlotClassName}>
+                        <Tag className="text-accent-400 shrink-0" size={18} />
+                      </span>
                       {isCategoriesPanelOpen && (
-                        <p className="text-base">{category.name}</p>
+                        <p className="text-base truncate">{category.name}</p>
                       )}
                     </div>
 
                     {/* Management buttons */}
                     {isCategoriesPanelOpen && isManaging ? (
-                      <div className="flex items-center gap-x-2">
+                      <div className="flex items-center gap-x-2 shrink-0 pl-1">
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
                             handleStartEdit(category)
                           }}
+                          className="cursor-pointer"
                         >
                           <Pencil
                             size={16}
@@ -315,6 +333,7 @@ export default function CategoriesPanel(): ReactElement {
                             e.stopPropagation()
                             handleDeleteCategory(category.id)
                           }}
+                          className="cursor-pointer"
                         >
                           <Trash
                             size={16}

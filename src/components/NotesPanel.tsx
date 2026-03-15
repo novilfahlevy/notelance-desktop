@@ -123,7 +123,7 @@ export function NotesPanel(): ReactElement {
   return (
     <div className="w-full pb-40">
       {/* Header with Search and Buttons */}
-      <div className="flex items-center gap-x-3 sticky top-0 bg-surface p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-x-3 gap-y-3 sticky top-0 bg-surface p-6">
         {/* Search Input */}
         <div className="relative flex-1">
           <Search
@@ -139,26 +139,28 @@ export function NotesPanel(): ReactElement {
           />
         </div>
 
-        {/* Sync Button */}
-        <button
-          onClick={handleSync}
-          disabled={isSyncing || isLoading}
-          className="flex items-center gap-x-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition-colors whitespace-nowrap font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Sinkronkan dengan server"
-        >
-          <RefreshCw size={18} className={isSyncing ? 'animate-spin' : ''} />
-          Sinkron
-        </button>
+        <div className="flex items-center justify-end gap-x-3">
+          {/* Sync Button */}
+          <button
+            onClick={handleSync}
+            disabled={isSyncing || isLoading}
+            className="flex items-center gap-x-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition-colors whitespace-nowrap font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Sinkronkan dengan server"
+          >
+            <RefreshCw size={18} className={isSyncing ? 'animate-spin' : ''} />
+            Sinkron
+          </button>
 
-        {/* Create Note Button */}
-        <button
-          onClick={handleCreateNote}
-          disabled={isLoading}
-          className="flex items-center gap-x-2 bg-accent-500 hover:bg-accent-600 text-white px-4 py-2 rounded-md transition-colors whitespace-nowrap font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Plus size={18} />
-          Buat Catatan
-        </button>
+          {/* Create Note Button */}
+          <button
+            onClick={handleCreateNote}
+            disabled={isLoading}
+            className="flex items-center gap-x-2 bg-accent-500 hover:bg-accent-600 text-white px-4 py-2 rounded-md transition-colors whitespace-nowrap font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Plus size={18} />
+            Buat Catatan
+          </button>
+        </div>
       </div>
 
       <div className="px-6">
@@ -186,7 +188,7 @@ export function NotesPanel(): ReactElement {
 
         {/* Notes List */}
         {!isLoading && notes.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="flex flex-col items-center justify-center py-16 text-center select-none">
             <FileText size={48} className="text-text-muted mb-4" />
             <p className="text-text-muted text-lg mb-2">
               {isSearching ? 'Tidak ada catatan ditemukan' : 'Belum ada catatan'}
@@ -198,7 +200,7 @@ export function NotesPanel(): ReactElement {
             </p>
           </div>
         ) : !isLoading ? (
-          <ul className="flex flex-col gap-y-5">
+          <ul className="flex flex-col gap-y-5 select-none">
             {notes.map((note: Note) => (
               <li
                 key={note.id}

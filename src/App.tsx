@@ -50,11 +50,22 @@ export default function App(): ReactElement {
 
       {/* Notes List */}
       <main className="border-r border-border-default bg-surface flex-1 transition-all duration-300 overflow-y-scroll">
-        <NotesPanel />
+        {selectedNote ? (
+          <>
+            <div className="block xl:hidden">
+              <NotesEditorPanel />
+            </div>
+            <div className="hidden xl:block">
+              <NotesPanel />
+            </div>
+          </>
+        ) : (
+          <NotesPanel />
+        )}
       </main>
 
       {/* Editor Area */}
-      <section className="flex-1 bg-main hidden lg:block">
+      <section className="flex-1 bg-main hidden xl:block">
         {selectedNote ? (
           <NotesEditorPanel />
         ) : (

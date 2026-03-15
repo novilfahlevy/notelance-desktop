@@ -1,8 +1,9 @@
 import { useEditor, EditorContent, Editor } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
+import { StarterKit } from '@tiptap/starter-kit'
 import TiptapUnderline from '@tiptap/extension-underline'
 import TiptapLink from '@tiptap/extension-link'
 import { 
+  ArrowLeft,
   Bold, 
   Italic, 
   List, 
@@ -17,7 +18,12 @@ import {
   LoaderCircle
 } from 'lucide-react'
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
-import { selectSelectedNote, updateNote as updateNoteAction, deleteNote as deleteNoteAction } from '@/slices/notesSlice'
+import {
+  selectSelectedNote,
+  setSelectedNote,
+  updateNote as updateNoteAction,
+  deleteNote as deleteNoteAction,
+} from '@/slices/notesSlice'
 import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import { showConfirmDialog } from '@/utils/confirmDialog'
@@ -199,6 +205,10 @@ export default function NotesEditor() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [selectedNote, editor, title])
 
+  const handleBack = () => {
+    dispatch(setSelectedNote(null))
+  }
+
   const handleDelete = async () => {
     if (!selectedNote) return
 
@@ -267,6 +277,15 @@ export default function NotesEditor() {
   return (
     <div className="flex flex-col h-screen bg-main text-text-primary">
       <div className="border-b border-border-default flex gap-2 bg-surface items-center p-3">
+        <button
+          onClick={handleBack}
+          className="px-3 py-2 rounded hover:bg-main text-text-secondary hover:text-text-primary transition-colors cursor-pointer flex items-center gap-2 xl:hidden"
+          title="Kembali ke daftar catatan"
+        >
+          <ArrowLeft size={18} />
+          <span className="text-sm font-medium">Kembali</span>
+        </button>
+
         {/* Dropdown kategori */}
         <CategoriesSelector
           options={categoriesOptions}
